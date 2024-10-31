@@ -23,7 +23,7 @@ const EmailInput = ({ value, onChangeText, errorMessage }) => {
     <>
       <View style={styles.inputContainer}>
         <Image
-          source={require('../assets/mail.png')}
+          source={require('../assets/Login/mail.png')}
           style={styles.inputIcon}
         />
         <TextInput
@@ -45,7 +45,7 @@ const PasswordInput = ({ value, onChangeText, errorMessage }) => {
     <>
       <View style={styles.inputContainer}>
         <Image 
-          source={require('../assets/Password.png')}
+          source={require('../assets/Login/Password.png')}
           style={styles.inputIcon} 
         />
         <TextInput
@@ -74,7 +74,7 @@ const GoogleLoginButton = () => {
   return (
     <TouchableOpacity style={styles.socialButton}>
       <Image 
-        source={require('../assets/google.png')}
+        source={require('../assets/Login/google.png')}
         style={styles.socialLogo} 
       />
       <Text style={styles.socialText}>Login with Google</Text>
@@ -86,7 +86,7 @@ const FacebookLoginButton = () => {
   return (
     <TouchableOpacity style={styles.socialButton}>
       <Image
-        source={require('../assets/Facebook.png')}
+        source={require('../assets/Login/Facebook.png')}
         style={styles.socialLogo}
       />
       <Text style={styles.socialText}>Login with Facebook</Text>
@@ -166,7 +166,7 @@ const LoginScreen = () => {
 
   return (
     <View style={styles.screen}>
-      <Image source={require('../assets/logo.png')} style={styles.logo} />
+      <Image source={require('../assets/Login/logo.png')} style={styles.logo} />
       <WelcomeText />
       <EmailInput value={email} onChangeText={setEmail} errorMessage={errors.email} />
       <PasswordInput value={password} onChangeText={setPassword} errorMessage={errors.password} />

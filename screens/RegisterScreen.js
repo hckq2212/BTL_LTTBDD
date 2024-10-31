@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { StyleSheet, View, Text, Image, TextInput, TouchableOpacity, Alert, SafeAreaView } from 'react-native';
+import { StyleSheet, View, Text, Image, TextInput, TouchableOpacity, Alert,SafeAreaView} from 'react-native';
 
 const SubHeaderText = () => (
   <Text style={styles.subHeaderText}>Let’s Get Started</Text>
@@ -71,13 +71,13 @@ const RegisterScreen = () => {
   return (
     <View style={styles.screen}>
       <View style={styles.iconPlaceholder}>
-        <Image source={require('../assets/logo.png')} style={styles.icon} />
+        <Image source={require('../assets/Register/logo.png')} style={styles.icon} />
       </View>
       <SubHeaderText />
       <HeaderText />
 
       <InputField
-        icon={require('../assets/User.png')}
+        icon={require('../assets/Register/User.png')}
         placeholder="Enter full name"
         value={fullName}
         onChangeText={setFullName}
@@ -85,7 +85,7 @@ const RegisterScreen = () => {
       />
 
       <InputField
-        icon={require('../assets/mail.png')}
+        icon={require('../assets/Register/mail.png')}
         placeholder="Your Email"
         value={email}
         onChangeText={setEmail}
@@ -94,7 +94,7 @@ const RegisterScreen = () => {
       />
 
       <InputField
-        icon={require('../assets/Password.png')}
+        icon={require('../assets/Register/Password.png')}
         placeholder="Password"
         value={password}
         onChangeText={setPassword}
@@ -103,7 +103,7 @@ const RegisterScreen = () => {
       />
 
       <InputField
-        icon={require('../assets/Password.png')}
+        icon={require('../assets/Register/Password.png')}
         placeholder="Password Again"
         value={passwordAgain}
         onChangeText={setPasswordAgain}
