@@ -12,7 +12,7 @@ const HomeIndicator = () => {
 const WelcomeText = () => {
   return (
     <SafeAreaView style={styles.welcomeContainer}>
-      <Text style={styles.welcomeTitle}>Welcome to Lafyuu</Text>
+      <Text style={styles.welcomeTitle}>Welcome to Shop</Text>
       <Text style={styles.welcomeSubtitle}>Sign in to continue</Text>
     </SafeAreaView>
   );
@@ -44,9 +44,9 @@ const PasswordInput = ({ value, onChangeText, errorMessage }) => {
   return (
     <>
       <View style={styles.inputContainer}>
-        <Image 
+        <Image
           source={require('../assets/Login/Password.png')}
-          style={styles.inputIcon} 
+          style={styles.inputIcon}
         />
         <TextInput
           placeholder="Password"
@@ -73,9 +73,9 @@ const LoginButton = ({ onPress }) => {
 const GoogleLoginButton = () => {
   return (
     <TouchableOpacity style={styles.socialButton}>
-      <Image 
+      <Image
         source={require('../assets/Login/google.png')}
-        style={styles.socialLogo} 
+        style={styles.socialLogo}
       />
       <Text style={styles.socialText}>Login with Google</Text>
     </TouchableOpacity>

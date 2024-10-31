@@ -5,7 +5,7 @@ const SuccessMessage = () => {
   return (
     <View style={successMessageStyles.container}>
       <Image
-        source={require('../assets/logo.png')}
+        source={require('../assets/Login/logo.png')}
         style={successMessageStyles.icon}
       />
       <Text style={successMessageStyles.title}>Success</Text>
