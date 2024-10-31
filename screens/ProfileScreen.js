@@ -11,8 +11,8 @@ const ProfileInfo = () => {
         style={profileInfoStyles.image}
       />
       <View>
-        <Text style={profileInfoStyles.name}>Maximus Gold</Text>
-        <Text style={profileInfoStyles.username}>@derlaxy</Text>
+        <Text style={profileInfoStyles.name}>Minh Duc</Text>
+        <Text style={profileInfoStyles.username}>@ducvu</Text>
       </View>
     </View>
   );
@@ -63,10 +63,10 @@ const ProfileScreen = () => {
   const route = useRoute();
 
   const [gender, setGender] = useState('Male');
-  const [birthday, setBirthday] = useState('2000-12-12');
-  const [email, setEmail] = useState('Derlaxy@yahoo.com');
-  const [phoneNumber, setPhoneNumber] = useState('0369852147');
-  const [password, setPassword] = useState('oldPassword123');  
+  const [birthday, setBirthday] = useState('2003-10-14');
+  const [email, setEmail] = useState('minhduc@gmail.com');
+  const [phoneNumber, setPhoneNumber] = useState('0123456789');
+  const [password, setPassword] = useState('oldPassword123');
 
   React.useEffect(() => {
     if (route.params?.updatedValue) {
@@ -94,7 +94,7 @@ const ProfileScreen = () => {
 
   return (
     <SafeAreaView style={styles.screen}>
-      <ProfileInfo/>
+      <ProfileInfo />
       <ProfileItem
         icon={require('../assets/Profile/Gender.png')}
         label='Gender'
@@ -123,7 +123,7 @@ const ProfileScreen = () => {
         icon={require('../assets/Profile/PasswordBlue.png')}
         label='Change Password'
         value='••••••••'
-        onPress={() => navigation.navigate('Password', { value: password, field: 'Password' })} 
+        onPress={() => navigation.navigate('Password', { value: password, field: 'Password' })}
       />
     </SafeAreaView>
   );
