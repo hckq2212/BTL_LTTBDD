@@ -9,6 +9,7 @@ import EditPhoneNumberScreen from './screens/EditPhoneNumberScreen';
 import EditPasswordScreen from './screens/EditPasswordScreen';
 import SuccessScreen from './screens/SuccessScreen'
 import RegisterScreen from './screens/RegisterScreen'
+import LoginScreen from './screens/LoginScreen'
 
 const Stack = createStackNavigator();
 
@@ -17,10 +18,10 @@ export default function App() {
     <NavigationContainer>
       <Stack.Navigator>
         <Stack.Screen
-          name="RegisterScreen"
-          component={RegisterScreen}
+          name="LoginScreen"
+          component={LoginScreen}
           options={{ headerShown: false }}
-        />        
+        />
         <Stack.Screen name="Gender" component={EditGenderScreen} />
         <Stack.Screen name="Birthday" component={EditBirthdayScreen} />
         <Stack.Screen name="Email" component={EditEmailScreen} />
