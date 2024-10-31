@@ -7,7 +7,7 @@ const ProfileInfo = () => {
   return (
     <View style={profileInfoStyles.container}>
       <Image
-        source={require('../assets/avatar.png')}
+        source={require('../assets/Profile/avatar.png')}
         style={profileInfoStyles.image}
       />
       <View>
@@ -96,31 +96,31 @@ const ProfileScreen = () => {
     <SafeAreaView style={styles.screen}>
       <ProfileInfo/>
       <ProfileItem
-        icon={require('../assets/Gender.png')}
+        icon={require('../assets/Profile/Gender.png')}
         label='Gender'
         value={gender}
         onPress={() => navigation.navigate('Gender', { value: gender, field: 'Gender' })}
       />
       <ProfileItem
-        icon={require('../assets/Date.png')}
+        icon={require('../assets/Profile/Date.png')}
         label='Birthday'
         value={birthday}
         onPress={() => navigation.navigate('Birthday', { value: birthday, field: 'Birthday' })}
       />
       <ProfileItem
-        icon={require('../assets/Message.png')}
+        icon={require('../assets/Profile/Message.png')}
         label='Email'
         value={email}
         onPress={() => navigation.navigate('Email', { value: email, field: 'Email' })}
       />
       <ProfileItem
-        icon={require('../assets/Phone.png')}
+        icon={require('../assets/Profile/Phone.png')}
         label='Phone Number'
         value={phoneNumber}
         onPress={() => navigation.navigate('Phone Number', { value: phoneNumber, field: 'Phone Number' })}
       />
       <ProfileItem
-        icon={require('../assets/PasswordBlue.png')}
+        icon={require('../assets/Profile/PasswordBlue.png')}
         label='Change Password'
         value='••••••••'
         onPress={() => navigation.navigate('Password', { value: password, field: 'Password' })} 
