@@ -27,6 +27,10 @@ export default function App() {
         <Stack.Screen name="Email" component={EditEmailScreen} />
         <Stack.Screen name="Phone Number" component={EditPhoneNumberScreen} />
         <Stack.Screen name="Password" component={EditPasswordScreen} />
+        <Stack.Screen name="RegisterScreen" component={RegisterScreen} />
+        <Stack.Screen name="SuccessScreen" component={SuccessScreen} />
+        <Stack.Screen name="ProfileScreen" component={ProfileScreen} />
+
       </Stack.Navigator>
     </NavigationContainer>
   );
