@@ -66,7 +66,7 @@ const ProfileScreen = () => {
   const [birthday, setBirthday] = useState('2003-10-14');
   const [email, setEmail] = useState('minhduc@gmail.com');
   const [phoneNumber, setPhoneNumber] = useState('0123456789');
-  const [password, setPassword] = useState('oldPassword123');
+  const [password, setPassword] = useState('oldPassword123');  
 
   React.useEffect(() => {
     if (route.params?.updatedValue) {
@@ -94,7 +94,7 @@ const ProfileScreen = () => {
 
   return (
     <SafeAreaView style={styles.screen}>
-      <ProfileInfo />
+      <ProfileInfo/>
       <ProfileItem
         icon={require('../assets/Profile/Gender.png')}
         label='Gender'
@@ -123,7 +123,7 @@ const ProfileScreen = () => {
         icon={require('../assets/Profile/PasswordBlue.png')}
         label='Change Password'
         value='••••••••'
-        onPress={() => navigation.navigate('Password', { value: password, field: 'Password' })}
+        onPress={() => navigation.navigate('Password', { value: password, field: 'Password' })} 
       />
     </SafeAreaView>
   );
