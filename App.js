@@ -12,6 +12,9 @@ import SuccessScreen from './screens/SuccessScreen'
 import RegisterScreen from './screens/RegisterScreen'
 import PaymentMethodsScreen from './screens/PaymentMethodScreen'
 import AddPaymentMethodScreen from './screens/AddPaymentMethodScreen'
+import FilterSearchScreen from './screens/FilterSearchScreen'
+import SearchScreen from './screens/SearchScreen'
+
 const Stack = createStackNavigator();
 
 export default function App() {
@@ -19,6 +22,17 @@ export default function App() {
     <NavigationContainer>
       <Stack.Navigator>
         <Stack.Screen
+          name="FilterSearchScreen"
+          component={FilterSearchScreen}
+          options={{ headerShown: false }}
+        />        
+        <Stack.Screen name="PaymentMethodsScreen" component={PaymentMethodsScreen} />
+        <Stack.Screen name="SearchScreen" component={SearchScreen} />
+        <Stack.Screen name="ProfileScreen" component={ProfileScreen} />
+        <Stack.Screen name="LoginScreen" component={LoginScreen} />
+        <Stack.Screen name="SuccessScreen" component={SuccessScreen} />
+        <Stack.Screen name="AddPaymentMethodScreen" component={AddPaymentMethodScreen} />
+        <Stack.Screen name="RegisterScreen" component={RegisterScreen} />
           name="RegisterScreen"
           component={RegisterScreen}
           options={{ headerShown: false }}
