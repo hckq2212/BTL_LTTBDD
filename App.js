@@ -33,6 +33,13 @@ export default function App() {
         <Stack.Screen name="SuccessScreen" component={SuccessScreen} />
         <Stack.Screen name="AddPaymentMethodScreen" component={AddPaymentMethodScreen} />
         <Stack.Screen name="RegisterScreen" component={RegisterScreen} />
+          name="RegisterScreen"
+          component={RegisterScreen}
+          options={{ headerShown: false }}
+        />        
+        <Stack.Screen name="SuccessScreen" component={SuccessScreen} />
+        <Stack.Screen name="AddPaymentMethodScreen" component={AddPaymentMethodScreen} />
+        <Stack.Screen name="PaymentMethodsScreen" component={PaymentMethodsScreen} />
         <Stack.Screen name="Gender" component={EditGenderScreen} />
         <Stack.Screen name="Birthday" component={EditBirthdayScreen} />
         <Stack.Screen name="Email" component={EditEmailScreen} />
