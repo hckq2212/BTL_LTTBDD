@@ -1,25 +1,84 @@
 import React from 'react';
-import { View, Text, Image, ScrollView, StyleSheet } from 'react-native';
+import { View, Text, Image, ScrollView, StyleSheet, TouchableOpacity } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
+import category from '../data/Category';
 
 const CategoryList = () => {
-  const categories = ['Man Shirt', 'Dress', 'Man Work Equipment', 'Woman Bag', 'Man Shoes'];
+  const navigation = useNavigation();
+
+  const handleSeeAll = () => {
+    navigation.navigate('CategoryScreen');
+  };
+
   return (
-    <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.categoryList}>
-      {categories.map((category) => (
-        <View key={category} style={styles.categoryItem}>
-          <Image source={{ uri: 'https://placehold.co/48x48/png?text=Category&font=Montserrat' }} style={styles.categoryIcon} />
-          <Text style={styles.categoryText}>{category}</Text>
-        </View>
-      ))}
-    </ScrollView>
+    <View style={styles.container}>
+      <View style={styles.header}>
+        <Text style={styles.categoryTitle}>Category</Text>
+        <TouchableOpacity onPress={handleSeeAll}>
+          <Text style={styles.seeAllText}>See All</Text>
+        </TouchableOpacity>
+      </View>
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        contentContainerStyle={styles.categoryList}
+      >
+        {category.slice(0, 4).map((item) => (
+          <View
+            key={item.type}
+            style={styles.categoryItem}
+            accessible
+            accessibilityLabel={`Category: ${item.type}`}
+          >
+            <Image source={item.image} style={styles.categoryIcon} />
+            <Text style={styles.categoryText}>{item.type}</Text>
+          </View>
+        ))}
+      </ScrollView>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
-  categoryList: { marginVertical: 16, paddingHorizontal: 16 },
-  categoryItem: { alignItems: 'center', marginRight: 24 },
-  categoryIcon: { width: 48, height: 48, marginBottom: 8 },
-  categoryText: { fontSize: 12, color: '#223263' },
+  container: {
+    marginVertical: 16,
+    paddingHorizontal: 16,
+  },
+  header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  categoryList: {
+    paddingHorizontal: 8,
+  },
+  categoryItem: {
+    alignItems: 'center',
+    marginRight: 24,
+  },
+  categoryIcon: {
+    width: 40,
+    height: 40,
+    marginBottom: 8,
+    resizeMode: 'contain',
+  },
+  categoryText: {
+    fontSize: 12,
+    color: '#223263',
+    textAlign: 'center',
+    maxWidth: 90,
+  },
+  categoryTitle: {
+    fontSize: 16,
+    color: '#223263',
+    fontWeight: '700',
+  },
+  seeAllText: {
+    fontSize: 14,
+    color: '#40BFFF',
+    fontWeight: '500',
+  },
 });
 
 export default CategoryList;

@@ -1,112 +1,97 @@
 import React, { useState, useRef } from "react";
-import { View, Text, TextInput, TouchableOpacity, FlatList, ActivityIndicator, StyleSheet } from "react-native";
+import { View, Text, TextInput, TouchableOpacity, ActivityIndicator, StyleSheet } from "react-native";
 import Icon from 'react-native-vector-icons/FontAwesome';
-import ProductCard from "../components/ProductCard";
+import { useSelector, useDispatch } from 'react-redux';
+import { useNavigation } from '@react-navigation/native';
+import { addHistorySearch, removeHistorySearch } from '../reduxToolkit/productsSlice';
 
 const SearchScreen = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [suggestions, setSuggestions] = useState([]);
-  const [searchResults, setSearchResults] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
-  const [showSuggestions, setShowSuggestions] = useState(false);
   const searchRef = useRef(null);
 
-  const mockProducts = [
-    {
-      id: 1,
-      name: "Nike Air Max Running Shoes",
-      price: "$129.99",
-      oldPrice: "$159.99",
-      discount: "20% OFF",
-      imageUrl: "https://images.unsplash.com/photo-1542291026-7eec264c27ff"
-    },
-    {
-      id: 2,
-      name: "Adidas Classic Sneakers",
-      price: "$89.99",
-      oldPrice: "$109.99",
-      discount: "18% OFF",
-      imageUrl: "https://images.unsplash.com/photo-1608231387042-66d1773070a5"
-    },
-    {
-      id: 3,
-      name: "Premium Leather Boots",
-      price: "$159.99",
-      oldPrice: "$199.99",
-      discount: "25% OFF",
-      imageUrl: "https://images.unsplash.com/photo-1605733160314-4fc7dac4bb16"
-    },
-    {
-      id: 4,
-      name: "Sports Training Shoes",
-      price: "$119.99",
-      oldPrice: "$149.99",
-      discount: "20% OFF",
-      imageUrl: "https://images.unsplash.com/photo-1595950653106-6c9ebd614d3a"
-    }
-  ];
+  const dispatch = useDispatch();
+  const navigation = useNavigation();
+  const products = useSelector((state) => state.products.products);
+  const historySearch = useSelector((state) => state.products.historySearch);
 
   const handleSearch = (term) => {
     setIsLoading(true);
     setError("");
-    const filteredProducts = mockProducts.filter(
-      (product) =>
-        product.name.toLowerCase().includes(term.toLowerCase())
+
+    const historyMatches = historySearch.filter(item =>
+      item.toLowerCase().includes(term.toLowerCase())
     );
-    setSearchResults(filteredProducts);
-    setSuggestions(filteredProducts.map((product) => product.name).slice(0, 5));
+
+    const productMatches = historyMatches.length === 0
+      ? products.filter(product =>
+        product.name.toLowerCase().includes(term.toLowerCase())
+      )
+      : [];
+
+    const combinedSuggestions = [...historyMatches, ...productMatches.map(product => product.name)].slice(0, 5);
+    setSuggestions(combinedSuggestions);
+
     setIsLoading(false);
-    if (filteredProducts.length === 0) setError("Không tìm thấy kết quả");
+    if (combinedSuggestions.length === 0) setError("Không tìm thấy kết quả");
+    if (term.trim()) dispatch(addHistorySearch(term));
   };
 
   const handleInputChange = (value) => {
     setSearchTerm(value);
-    setShowSuggestions(true);
     if (value.trim()) handleSearch(value);
     else {
       setSuggestions([]);
-      setSearchResults([]);
       setError("");
     }
   };
 
   const handleSuggestionClick = (suggestion) => {
     setSearchTerm(suggestion);
-    setShowSuggestions(false);
-    handleSearch(suggestion);
+    dispatch(addHistorySearch(suggestion));
+    console.log(suggestion);
+    navigation.navigate('SearchResult', { searchQuery: suggestion });
   };
+
 
   const clearSearch = () => {
     setSearchTerm("");
     setSuggestions([]);
-    setSearchResults([]);
     setError("");
+  };
+
+  const handleRemoveHistory = (item) => {
+    dispatch(removeHistorySearch(item));
   };
 
   return (
     <View style={styles.screen}>
-      <Text style={styles.title}>Tìm Kiếm Giày</Text>
+      <Text style={styles.title}>Search Shoes</Text>
       <View style={styles.searchContainer} ref={searchRef}>
         <TextInput
           style={styles.input}
           value={searchTerm}
           onChangeText={handleInputChange}
-          placeholder="Tìm kiếm giày..."
+          placeholder="Search shoes..."
           placeholderTextColor="#9098b1"
         />
         <View style={styles.iconContainer}>
           {isLoading && <ActivityIndicator size="small" color="#40bfff" />}
           {searchTerm && (
-            <TouchableOpacity onPress={clearSearch}>
+            <TouchableOpacity style={styles.clearIcon} onPress={clearSearch}>
               <Icon name="close" size={20} color="#9098b1" />
             </TouchableOpacity>
           )}
-          <Icon name="search" size={20} color="#40bfff" />
+          <TouchableOpacity onPress={() => navigation.navigate('SearchResult', { searchQuery: searchTerm })}>
+            <Icon name="search" size={20} color="#40bfff" />
+          </TouchableOpacity>
+
         </View>
       </View>
 
-      {showSuggestions && suggestions.length > 0 && (
+      {suggestions.length > 0 && (
         <View style={styles.suggestionsContainer}>
           {suggestions.map((suggestion, index) => (
             <TouchableOpacity
@@ -121,21 +106,20 @@ const SearchScreen = () => {
       )}
 
       {error && <Text style={styles.errorText}>{error}</Text>}
-      <FlatList
-        data={searchResults}
-        keyExtractor={(item) => item.id.toString()}
-        numColumns={2}
-        renderItem={({ item }) => (
-          <ProductCard
-            name={item.name}
-            price={item.price}
-            oldPrice={item.oldPrice}
-            discount={item.discount}
-            imageUrl={item.imageUrl}
-          />
-        )}
-        contentContainerStyle={styles.resultsContainer}
-      />
+
+      <View style={styles.historyContainer}>
+        <Text style={styles.historyTitle}>Lịch sử tìm kiếm</Text>
+        {historySearch.map((item, index) => (
+          <TouchableOpacity key={index} style={styles.historyItem}>
+            <TouchableOpacity onPress={() => handleSuggestionClick(item)}>
+              <Text style={styles.historyText}>{item}</Text>
+            </TouchableOpacity>
+            <TouchableOpacity onPress={() => handleRemoveHistory(item)}>
+              <Icon name="close" size={16} color="#9098b1" />
+            </TouchableOpacity>
+          </TouchableOpacity>
+        ))}
+      </View>
     </View>
   );
 };
@@ -198,8 +182,32 @@ const styles = StyleSheet.create({
     marginTop: 5,
     fontFamily: 'Poppins',
   },
-  resultsContainer: {
-    paddingTop: 20,
+  historyContainer: {
+    marginTop: 20,
+    width: '100%',
+  },
+  historyTitle: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#223263',
+    marginBottom: 10,
+  },
+  historyItem: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: 5,
+    paddingHorizontal: 10,
+    backgroundColor: '#f9f9f9',
+    borderRadius: 5,
+    marginBottom: 5,
+  },
+  historyText: {
+    fontSize: 14,
+    color: '#223263',
+  },
+  clearIcon: {
+    marginRight: 10,
   },
 });
 

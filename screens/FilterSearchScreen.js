@@ -2,8 +2,9 @@ import React, { useState } from 'react';
 import { View, Text, StyleSheet, TextInput, TouchableOpacity, Alert, ScrollView } from 'react-native';
 import MultiSlider from '@ptomasroos/react-native-multi-slider';
 
-const FilterSearchScreen = ({ navigation }) => {
-  const [priceRange, setPriceRange] = useState([1.245, 9.344]);
+const FilterSearchScreen = ({ route, navigation }) => {
+  const { searchQuery } = route.params || {};
+  const [priceRange, setPriceRange] = useState([0, 1000]);
   const [condition, setCondition] = useState(null);
   const [buyingFormat, setBuyingFormat] = useState(null);
 
@@ -20,7 +21,19 @@ const FilterSearchScreen = ({ navigation }) => {
       return;
     }
 
-    navigation.goBack();
+    console.log(searchQuery);
+    console.log(priceRange);
+    console.log(condition);
+    console.log(buyingFormat);
+
+    navigation.navigate('SearchResult', {
+      searchQuery: searchQuery,
+      filters: {
+        priceRange,
+        condition,
+        buyingFormat,
+      },
+    });
   };
 
   return (
@@ -32,13 +45,13 @@ const FilterSearchScreen = ({ navigation }) => {
         <View style={styles.priceRangeContainer}>
           <TextInput
             style={styles.priceInput}
-            value={`$${priceRange[0].toFixed(3)}`}
+            value={`$${priceRange[0].toFixed(2)}`}
             editable={false}
             placeholder="Min Price"
           />
           <TextInput
             style={styles.priceInput}
-            value={`$${priceRange[1].toFixed(3)}`}
+            value={`$${priceRange[1].toFixed(2)}`}
             editable={false}
             placeholder="Max Price"
           />
@@ -46,10 +59,10 @@ const FilterSearchScreen = ({ navigation }) => {
         <MultiSlider
           values={priceRange}
           onValuesChange={setPriceRange}
-          min={1.245}
-          max={9.344}
-          step={0.001}
-          sliderLength={350} 
+          min={0}
+          max={1000}
+          step={10}
+          sliderLength={350}
           selectedStyle={{ backgroundColor: '#40bfff' }}
           unselectedStyle={{ backgroundColor: '#dcdcdc' }}
           markerStyle={{
@@ -92,7 +105,7 @@ const FilterSearchScreen = ({ navigation }) => {
           ))}
         </View>
       </ScrollView>
-      
+
       <TouchableOpacity style={styles.applyButton} onPress={handleApply}>
         <Text style={styles.applyButtonText}>Apply</Text>
       </TouchableOpacity>
