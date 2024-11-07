@@ -1,30 +1,22 @@
-import  { useState } from 'react';
+import { useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
-import { RadioButton } from 'react-native-paper';
+import { DatePicker } from 'react-native-paper'; // Assuming you're using a date picker from react-native-paper
 
-const EditGenderScreen = ({ navigation, route }) => {
-  const [gender, setGender] = useState(route.params.value);
+const EditBirthdayScreen = ({ navigation, route }) => {
+  const [birthday, setBirthday] = useState(route.params.value);
 
   const handleSave = () => {
-    navigation.navigate('Profile', { updatedValue: gender, field: 'Gender' });
+    navigation.navigate('Profile', { updatedValue: birthday, field: 'Birthday' });
   };
 
   return (
     <View style={styles.container}>
-      <RadioButton.Group onValueChange={value => setGender(value)} value={gender}>
-        <View style={styles.radioItem}>
-          <RadioButton value="Male" />
-          <Text>Male</Text>
-        </View>
-        <View style={styles.radioItem}>
-          <RadioButton value="Female" />
-          <Text>Female</Text>
-        </View>
-        <View style={styles.radioItem}>
-          <RadioButton value="Other" />
-          <Text>Other</Text>
-        </View>
-      </RadioButton.Group>
+      <Text style={styles.label}>Select Your Birthday:</Text>
+      <DatePicker
+        date={birthday}
+        onDateChange={setBirthday}
+        mode="date"
+      />
       <TouchableOpacity style={styles.saveButton} onPress={handleSave}>
         <Text style={styles.saveButtonText}>Save</Text>
       </TouchableOpacity>
@@ -38,10 +30,9 @@ const styles = StyleSheet.create({
     padding: 16,
     backgroundColor: '#fff',
   },
-  radioItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 16,
+  label: {
+    fontSize: 18,
+    marginBottom: 10,
   },
   saveButton: {
     backgroundColor: '#00f',
@@ -57,4 +48,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default EditGenderScreen;
+export default EditBirthdayScreen;

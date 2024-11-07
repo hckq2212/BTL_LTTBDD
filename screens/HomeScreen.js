@@ -47,7 +47,6 @@ const HomeScreen = () => {
         showsVerticalScrollIndicator={false}
         columnWrapperStyle={styles.columnWrapper}
       />
-      <FooterNav />
     </SafeAreaView>
   );
 };

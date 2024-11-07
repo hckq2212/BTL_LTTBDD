@@ -22,7 +22,7 @@ const AddPaymentMethodScreen = () => {
         console.error("Lỗi khi gọi API: ", error);
       }
     };
-    
+
     fetchPaymentMethods();
   }, []);
 

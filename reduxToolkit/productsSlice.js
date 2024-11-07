@@ -15,6 +15,40 @@ const initialState = {
         },
     ],
     selectedAddressId: null,
+    account: [
+        {
+            id: 1,
+            name: 'minhduc',
+            email: 'minhduc@gmail.com',
+            password: '123456',
+        },
+        {
+            id: 2,
+            name: 'khanhquang',
+            email: 'khanhquang@gmail.com',
+            password: '123456',
+        }
+    ],
+    profile: [
+        {
+            id: 1,
+            name: 'minhduc',
+            gender: 'Male',
+            phoneNumber: '0123456789',
+            birthdate: '2003-10-14',
+            account_id: 1
+        },
+        {
+            id: 2,
+            name: 'khanhquang',
+            gender: 'Male',
+            phoneNumber: '0123456789',
+            birthdate: '2003-12-22',
+            account_id: 2
+        }
+    ],
+    accountLoggedIn: null,
+    loginError: null,
 };
 
 const productsSlice = createSlice({
@@ -26,11 +60,18 @@ const productsSlice = createSlice({
         },
         toggleFavorite: (state, action) => {
             const productId = action.payload;
-            const product = state.products.find((p) => p.id === productId);
-            if (product) {
-                product.isFavorite = !product.isFavorite;
-                if (product.isFavorite) {
-                    state.favoriteProducts.push(product);
+            const productIndex = state.products.findIndex((p) => p.id === productId);
+
+            if (productIndex >= 0) {
+                const updatedProduct = {
+                    ...state.products[productIndex],
+                    isFavorite: !state.products[productIndex].isFavorite,
+                };
+
+                state.products[productIndex] = updatedProduct;
+
+                if (updatedProduct.isFavorite) {
+                    state.favoriteProducts.push(updatedProduct);
                 } else {
                     state.favoriteProducts = state.favoriteProducts.filter((p) => p.id !== productId);
                 }
@@ -121,7 +162,55 @@ const productsSlice = createSlice({
         selectDeliveryAddress: (state, action) => {
             state.selectedAddressId = action.payload;
         },
-
+        addAccount: (state, action) => {
+            const existingAccount = state.account.find((acc) => acc.email === action.payload.email);
+            if (existingAccount) {
+                throw new Error('Email already exists!');
+            } else {
+                state.account.push({ ...action.payload, id: Date.now() });
+            }
+        },
+        updateAccount: (state, action) => {
+            const { id, updatedData } = action.payload;
+            const index = state.account.findIndex((account) => account.id === id);
+            if (index >= 0) {
+                state.account[index] = { ...state.account[index], ...updatedData };
+            }
+        },
+        deleteAccount: (state, action) => {
+            state.account = state.account.filter((account) => account.id !== action.payload);
+        },
+        login: (state, action) => {
+            const { email, password } = action.payload;
+            const account = state.account.find((acc) => acc.email === email && acc.password === password);
+            if (account) {
+                state.accountLoggedIn = account;
+                state.loginError = null;
+            } else {
+                state.loginError = 'Invalid email or password';
+            }
+        },
+        logout: (state) => {
+            state.accountLoggedIn = null;
+        },
+        addProfile: (state, action) => {
+            const existingProfile = state.profile.find((p) => p.phoneNumber === action.payload.phoneNumber);
+            if (existingProfile) {
+                throw new Error('Phone number already exists!');
+            } else {
+                state.profile.push({ ...action.payload, id: Date.now() });
+            }
+        },
+        updateProfile: (state, action) => {
+            const { id, updatedData } = action.payload;
+            const index = state.profile.findIndex((p) => p.id === id);
+            if (index >= 0) {
+                state.profile[index] = { ...state.profile[index], ...updatedData };
+            }
+        },
+        deleteProfile: (state, action) => {
+            state.profile = state.profile.filter((p) => p.id !== action.payload);
+        },
     },
 });
 
@@ -140,6 +229,14 @@ export const {
     editDeliveryAddress,
     deleteDeliveryAddress,
     selectDeliveryAddress,
+    addAccount,
+    updateAccount,
+    deleteAccount,
+    login,
+    logout,
+    addProfile,
+    updateProfile,
+    deleteProfile,
 } = productsSlice.actions;
 
 export default productsSlice.reducer;

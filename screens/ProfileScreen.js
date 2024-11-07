@@ -2,8 +2,14 @@ import React, { useState } from 'react';
 import { StyleSheet, View, TouchableOpacity, Text, Image, SafeAreaView } from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { useNavigation, useRoute } from '@react-navigation/native';
+import { useSelector } from 'react-redux';
 
 const ProfileInfo = () => {
+  const accountLoggedIn = useSelector((state) => state.products.accountLoggedIn);
+  const profiles = useSelector((state) => state.products.profile);
+
+  const userProfile = profiles.find(profile => profile.account_id === (accountLoggedIn ? accountLoggedIn.id : null));
+
   return (
     <View style={profileInfoStyles.container}>
       <Image
@@ -11,12 +17,13 @@ const ProfileInfo = () => {
         style={profileInfoStyles.image}
       />
       <View>
-        <Text style={profileInfoStyles.name}>Minh Duc</Text>
-        <Text style={profileInfoStyles.username}>@ducvu</Text>
+        <Text style={profileInfoStyles.name}>{userProfile ? userProfile.name : 'User Name'}</Text>
+        <Text style={profileInfoStyles.username}>{accountLoggedIn ? `@${accountLoggedIn.name}` : '@username'}</Text>
       </View>
     </View>
   );
 };
+
 
 const profileInfoStyles = StyleSheet.create({
   container: {
@@ -66,7 +73,7 @@ const ProfileScreen = () => {
   const [birthday, setBirthday] = useState('2003-10-14');
   const [email, setEmail] = useState('minhduc@gmail.com');
   const [phoneNumber, setPhoneNumber] = useState('0123456789');
-  const [password, setPassword] = useState('oldPassword123');  
+  const [password, setPassword] = useState('oldPassword123');
 
   React.useEffect(() => {
     if (route.params?.updatedValue) {
@@ -94,7 +101,7 @@ const ProfileScreen = () => {
 
   return (
     <SafeAreaView style={styles.screen}>
-      <ProfileInfo/>
+      <ProfileInfo />
       <ProfileItem
         icon={require('../assets/Profile/Gender.png')}
         label='Gender'
@@ -123,7 +130,7 @@ const ProfileScreen = () => {
         icon={require('../assets/Profile/PasswordBlue.png')}
         label='Change Password'
         value='••••••••'
-        onPress={() => navigation.navigate('Password', { value: password, field: 'Password' })} 
+        onPress={() => navigation.navigate('Password', { value: password, field: 'Password' })}
       />
     </SafeAreaView>
   );
