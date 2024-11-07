@@ -171,29 +171,36 @@ const productsSlice = createSlice({
             }
         },
         updateAccount: (state, action) => {
-            const { id, updatedData } = action.payload;
-            const index = state.account.findIndex((account) => account.id === id);
-            if (index >= 0) {
-                state.account[index] = { ...state.account[index], ...updatedData };
-            }
-        },
+    const { id, updatedData } = action.payload;
+    const index = state.account.findIndex((account) => account.id === id);
+    if (index >= 0) {
+        state.account[index] = { ...state.account[index], ...updatedData };
+        if (state.accountLoggedIn?.id === id) {
+            state.accountLoggedIn = { ...state.accountLoggedIn, ...updatedData };
+        }
+    }
+},
         deleteAccount: (state, action) => {
             state.account = state.account.filter((account) => account.id !== action.payload);
         },
-        login: (state, action) => {
+         login: (state, action) => {
             const { email, password } = action.payload;
+            console.log(email);
+            console.log(password);
             const account = state.account.find((acc) => acc.email === email && acc.password === password);
+            console.log(account);
             if (account) {
                 state.accountLoggedIn = account;
                 state.loginError = null;
             } else {
-                state.loginError = 'Invalid email or password';
+                state.loginError = 'Invalid email or password'; 
             }
         },
+
         logout: (state) => {
             state.accountLoggedIn = null;
         },
-        addProfile: (state, action) => {
+        addUserProfile: (state, action) => {
             const existingProfile = state.profile.find((p) => p.phoneNumber === action.payload.phoneNumber);
             if (existingProfile) {
                 throw new Error('Phone number already exists!');
@@ -201,14 +208,14 @@ const productsSlice = createSlice({
                 state.profile.push({ ...action.payload, id: Date.now() });
             }
         },
-        updateProfile: (state, action) => {
+        updateUserProfile: (state, action) => {
             const { id, updatedData } = action.payload;
             const index = state.profile.findIndex((p) => p.id === id);
             if (index >= 0) {
                 state.profile[index] = { ...state.profile[index], ...updatedData };
             }
         },
-        deleteProfile: (state, action) => {
+        deleteUserProfile: (state, action) => {
             state.profile = state.profile.filter((p) => p.id !== action.payload);
         },
     },
@@ -234,9 +241,9 @@ export const {
     deleteAccount,
     login,
     logout,
-    addProfile,
-    updateProfile,
-    deleteProfile,
+    addUserProfile,
+    updateUserProfile,
+    deleteUserProfile
 } = productsSlice.actions;
 
 export default productsSlice.reducer;

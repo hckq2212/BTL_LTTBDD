@@ -1,8 +1,15 @@
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { View, Text, StyleSheet, TextInput, TouchableOpacity, Alert } from 'react-native';
+import { useDispatch, useSelector } from 'react-redux';
+import { updateAccount } from '../reduxToolkit/productsSlice';
 
-const EditPhoneNumberScreen = ({ navigation, route }) => {
-  const [phoneNumber, setPhoneNumber] = useState(route.params.value);
+const EditPhoneNumberScreen = ({ navigation }) => {
+  const dispatch = useDispatch();
+  const profiles = useSelector((state) => state.products.profile);
+  const accountLoggedIn = useSelector((state) => state.products.accountLoggedIn);
+
+  const userProfile = profiles.find(profile => profile.account_id === (accountLoggedIn ? accountLoggedIn.id : null));
+  const [phoneNumber, setPhoneNumber] = useState(userProfile.phoneNumber); 
 
   const handleSave = () => {
     if (!phoneNumber) {
@@ -16,7 +23,13 @@ const EditPhoneNumberScreen = ({ navigation, route }) => {
       return;
     }
 
-    navigation.navigate('Profile', { updatedValue: phoneNumber, field: 'Phone Number' });
+    dispatch(updateAccount({ id: userProfile.id, updatedData: { phoneNumber } }));
+
+    if (accountLoggedIn && accountLoggedIn.id === userProfile.id) {
+      dispatch(updateAccount({ id: accountLoggedIn.id, updatedData: { phoneNumber } }));
+    }
+
+    navigation.navigate('ProfileScreen', { updatedValue: phoneNumber, field: 'PhoneNumber' });
   };
 
   return (
@@ -49,7 +62,7 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   saveButton: {
-    backgroundColor: '#00f',
+    backgroundColor: '#007BFF',
     padding: 15,
     borderRadius: 10,
     alignItems: 'center',

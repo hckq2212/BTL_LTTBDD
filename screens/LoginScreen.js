@@ -4,7 +4,7 @@ import { useSelector, useDispatch } from 'react-redux';
 import { login, updateAccount } from '../reduxToolkit/productsSlice';
 import Icon from 'react-native-vector-icons/FontAwesome';
 const { useNavigation } = require('@react-navigation/native');
-const navigation = useNavigation();
+
 const WelcomeText = () => {
   return (
     <SafeAreaView style={styles.welcomeContainer}>
@@ -38,7 +38,6 @@ const FacebookLoginButton = () => {
   );
 };
 
-
 const OrLine = () => {
   return (
     <View style={styles.orContainer}>
@@ -49,8 +48,7 @@ const OrLine = () => {
   );
 };
 
-
-const RegisterLink = () => {
+const RegisterLink = ({ navigation }) => {
   const handlePress = () => {
     navigation.navigate('RegisterScreen');
   };
@@ -146,13 +144,14 @@ const ForgotPasswordModal = ({ visible, onClose }) => {
 };
 
 const LoginScreen = () => {
+  const navigation = useNavigation();
+  const dispatch = useDispatch();
+
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [errors, setErrors] = useState({});
   const [forgotPassVisible, setForgotPassVisible] = useState(false);
-
-  const accounts = useSelector((state) => state.products.account);
-  const dispatch = useDispatch();
+  const loginError = useSelector((state) => state.products.loginError);
 
   const validateForm = () => {
     let isValid = true;
@@ -178,19 +177,14 @@ const LoginScreen = () => {
   const handleSignIn = () => {
     if (validateForm()) {
       dispatch(login({ email, password }));
-      navigation.navigate('HomeScreen');
+      if (!loginError) {
+        navigation.navigate('HomeScreen');
+      } else {
+        Alert.alert('Login Error', loginError);
+      }
     }
   };
 
-
-  const handleForgotPassword = (email) => {
-    if (email.trim() === '') {
-      Alert.alert('Error', 'Please enter an email.');
-    } else {
-      Alert.alert('Success', 'A reset link has been sent to your email.');
-      setForgotPassVisible(false);
-    }
-  };
 
   return (
     <View style={styles.screen}>
@@ -231,7 +225,7 @@ const LoginScreen = () => {
       <TouchableOpacity onPress={() => setForgotPassVisible(true)} style={styles.centered}>
         <Text style={styles.forgotPassword}>Forgot Password?</Text>
       </TouchableOpacity>
-      <RegisterLink />
+      <RegisterLink navigation={navigation} />
 
       <ForgotPasswordModal
         visible={forgotPassVisible}
@@ -260,8 +254,8 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#ebf0ff',
     borderRadius: 8,
-    paddingVertical: 10, // Giảm padding để đồng bộ chiều cao
-    paddingHorizontal: 12, // Cân chỉnh chiều ngang giữa các phần tử
+    paddingVertical: 10,
+    paddingHorizontal: 12,
     backgroundColor: '#fff',
     marginVertical: 10,
     width: 343,
