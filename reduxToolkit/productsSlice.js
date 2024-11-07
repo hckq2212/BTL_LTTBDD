@@ -49,6 +49,7 @@ const initialState = {
     ],
     accountLoggedIn: null,
     loginError: null,
+    loginSuccess: false,
 };
 
 const productsSlice = createSlice({
@@ -163,50 +164,51 @@ const productsSlice = createSlice({
             state.selectedAddressId = action.payload;
         },
         addAccount: (state, action) => {
+            const {id, name, email, password }= action.payload;
             const existingAccount = state.account.find((acc) => acc.email === action.payload.email);
             if (existingAccount) {
                 throw new Error('Email already exists!');
             } else {
-                state.account.push({ ...action.payload, id: Date.now() });
+                const newAccount = { id, name, email, password };
+                state.account.push(newAccount);
             }
         },
-        updateAccount: (state, action) => {
-    const { id, updatedData } = action.payload;
-    const index = state.account.findIndex((account) => account.id === id);
-    if (index >= 0) {
-        state.account[index] = { ...state.account[index], ...updatedData };
-        if (state.accountLoggedIn?.id === id) {
-            state.accountLoggedIn = { ...state.accountLoggedIn, ...updatedData };
-        }
-    }
-},
         deleteAccount: (state, action) => {
             state.account = state.account.filter((account) => account.id !== action.payload);
         },
-         login: (state, action) => {
+        login: (state, action) => {
             const { email, password } = action.payload;
-            console.log(email);
-            console.log(password);
-            const account = state.account.find((acc) => acc.email === email && acc.password === password);
-            console.log(account);
-            if (account) {
-                state.accountLoggedIn = account;
+            const account = state.account.filter((acc) => acc.email === email && acc.password === password);
+            const size = account.length;
+            if (size > 0) {
+                state.loginSuccess = true;
                 state.loginError = null;
+                state.accountLoggedIn = account[0];
             } else {
-                state.loginError = 'Invalid email or password'; 
+                state.loginSuccess = false;
+                state.loginError = 'Invalid email or password';
             }
         },
-
+        updateAccount: (state, action) => {
+            const { id, updatedData } = action.payload;
+            const accountIndex = state.account.findIndex((acc) => acc.id === id);
+            if (accountIndex !== -1) {
+                state.account[accountIndex] = { ...state.account[accountIndex], ...updatedData };
+            }
+        },
         logout: (state) => {
-            state.accountLoggedIn = null;
+            state.loginSuccess = false;
         },
         addUserProfile: (state, action) => {
-            const existingProfile = state.profile.find((p) => p.phoneNumber === action.payload.phoneNumber);
-            if (existingProfile) {
-                throw new Error('Phone number already exists!');
-            } else {
-                state.profile.push({ ...action.payload, id: Date.now() });
-            }
+            const { id, name, phoneNumber, gender = 'Male', birthdate = '2003-01-01', account_id } = action.payload;
+            state.profile.push({
+                id,
+                name,
+                phoneNumber,
+                gender,
+                birthdate,
+                account_id,
+            });
         },
         updateUserProfile: (state, action) => {
             const { id, updatedData } = action.payload;

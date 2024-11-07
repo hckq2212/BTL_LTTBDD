@@ -9,6 +9,7 @@ import ProductCard from '../components/ProductCard';
 
 const HomeScreen = () => {
   const products = useSelector((state) => state.products.products);
+  console.log('Profiles:', useSelector((state) => state.products.profile));
 
   const flashSaleProducts = products.filter(product => product.isFlashSale);
   const megaSaleProducts = products.filter(product => product.isMegaSale);

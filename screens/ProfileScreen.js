@@ -9,7 +9,11 @@ const ProfileInfo = () => {
   const accountLoggedIn = useSelector((state) => state.products.accountLoggedIn);
   const profiles = useSelector((state) => state.products.profile);
 
-  const userProfile = profiles.find(profile => profile.account_id === (accountLoggedIn ? accountLoggedIn.id : null));
+  const userProfile = profiles.find(profile => profile.account_id === accountLoggedIn?.id);
+
+console.log('accountLoggedIn:', accountLoggedIn);
+console.log('profiles:', profiles);
+console.log('userProfile:', userProfile);
 
   return (
     <View style={profileInfoStyles.container}>
