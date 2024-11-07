@@ -21,10 +21,6 @@ const FilterSearchScreen = ({ route, navigation }) => {
       return;
     }
 
-    console.log(searchQuery);
-    console.log(priceRange);
-    console.log(condition);
-    console.log(buyingFormat);
 
     navigation.navigate('SearchResult', {
       searchQuery: searchQuery,

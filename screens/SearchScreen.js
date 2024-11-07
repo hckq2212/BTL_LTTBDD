@@ -51,7 +51,6 @@ const SearchScreen = () => {
   const handleSuggestionClick = (suggestion) => {
     setSearchTerm(suggestion);
     dispatch(addHistorySearch(suggestion));
-    console.log(suggestion);
     navigation.navigate('SearchResult', { searchQuery: suggestion });
   };
 
@@ -110,7 +109,7 @@ const SearchScreen = () => {
       <View style={styles.historyContainer}>
         <Text style={styles.historyTitle}>Lịch sử tìm kiếm</Text>
         {historySearch.map((item, index) => (
-          <TouchableOpacity key={index} style={styles.historyItem}>
+          <TouchableOpacity key={index} style={styles.historyItem} onPress={() => handleSuggestionClick(item)}>
             <TouchableOpacity onPress={() => handleSuggestionClick(item)}>
               <Text style={styles.historyText}>{item}</Text>
             </TouchableOpacity>

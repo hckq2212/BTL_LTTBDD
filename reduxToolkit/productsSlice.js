@@ -5,7 +5,16 @@ const initialState = {
     products: Products,
     favoriteProducts: Products.filter(product => product.isFavorite),
     historySearch: ['adi', 'ab', 'ac', 'dsa', 'axzc', 'b', 'c'],
-    cartProducts: [], // Cart items
+    cartProducts: [],
+    deliveryInfo: [
+        {
+            id: 1,
+            name: 'Priscekila',
+            address: '3711 Spring Hill Rd undefined Tallahassee, Nevada 52874 United States',
+            number: '+99 1234567890',
+        },
+    ],
+    selectedAddressId: null,
 };
 
 const productsSlice = createSlice({
@@ -29,7 +38,7 @@ const productsSlice = createSlice({
         },
         addHistorySearch: (state, action) => {
             if (!state.historySearch.includes(action.payload)) {
-                state.historySearch.unshift(action.payload); // Add the latest search at the start
+                state.historySearch.unshift(action.payload);
             }
         },
         removeHistorySearch: (state, action) => {
@@ -95,7 +104,23 @@ const productsSlice = createSlice({
                 }
             }
         },
-
+        addDeliveryAddress: (state, action) => {
+            const newAddress = { ...action.payload, id: Date.now() };
+            state.deliveryInfo.push(newAddress);
+        },
+        editDeliveryAddress: (state, action) => {
+            const { id, updatedAddress } = action.payload;
+            const index = state.deliveryInfo.findIndex((address) => address.id === id);
+            if (index >= 0) {
+                state.deliveryInfo[index] = { ...state.deliveryInfo[index], ...updatedAddress };
+            }
+        },
+        deleteDeliveryAddress: (state, action) => {
+            state.deliveryInfo = state.deliveryInfo.filter((address) => address.id !== action.payload);
+        },
+        selectDeliveryAddress: (state, action) => {
+            state.selectedAddressId = action.payload;
+        },
 
     },
 });
@@ -111,6 +136,10 @@ export const {
     increaseQuantity,
     decreaseQuantity,
     updateCartItemQuantity,
+    addDeliveryAddress,
+    editDeliveryAddress,
+    deleteDeliveryAddress,
+    selectDeliveryAddress,
 } = productsSlice.actions;
 
 export default productsSlice.reducer;

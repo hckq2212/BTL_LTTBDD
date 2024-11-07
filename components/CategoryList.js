@@ -24,15 +24,16 @@ const CategoryList = () => {
         contentContainerStyle={styles.categoryList}
       >
         {category.slice(0, 4).map((item) => (
-          <View
+          <TouchableOpacity
             key={item.type}
             style={styles.categoryItem}
             accessible
             accessibilityLabel={`Category: ${item.type}`}
+            onPress={() => navigation.navigate('SearchResult', { searchQuery: '', selectedCategory: item.type })}
           >
             <Image source={item.image} style={styles.categoryIcon} />
             <Text style={styles.categoryText}>{item.type}</Text>
-          </View>
+          </TouchableOpacity>
         ))}
       </ScrollView>
     </View>

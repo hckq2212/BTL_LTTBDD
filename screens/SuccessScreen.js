@@ -7,32 +7,56 @@ const SuccessScreen = () => {
   const navigation = useNavigation();
   const route = useRoute();
 
-  const { subtotal = 2800, tax = 280, fees = 0, selectedAccount } = route.params || {};
-  const totalAmount = subtotal + tax + fees;
+  // Destructure parameters and provide default values if necessary
+  const {
+    subtotal = 0,
+    tax = 0,
+    totalItems = 0,
+    selectedAccount = {},
+    selectedAddress = {}
+  } = route.params;
+
+  // Calculate total amount (Subtotal + Tax)
+  const totalAmount = parseFloat(subtotal) + parseFloat(tax);
 
   return (
     <View style={styles.container}>
       <View style={styles.summaryContainer}>
         <View style={styles.row}>
           <Text style={styles.label}>Subtotal</Text>
-          <Text style={styles.value}>${subtotal.toLocaleString()}</Text>
+          <Text style={styles.value}>${parseFloat(subtotal).toFixed(2)}</Text>
         </View>
         <View style={styles.row}>
           <Text style={styles.label}>Tax (10%)</Text>
-          <Text style={styles.value}>${tax.toLocaleString()}</Text>
+          <Text style={styles.value}>${parseFloat(tax).toFixed(2)}</Text>
         </View>
-        <View style={styles.row}>
-          <Text style={styles.label}>Fees</Text>
-          <Text style={styles.value}>${fees.toLocaleString()}</Text>
-        </View>
-        
+
         <Divider style={styles.divider} />
 
         <View style={styles.row}>
-          <Text style={styles.label}>Card</Text>
+          <Text style={styles.label}>Total Items</Text>
+          <Text style={styles.value}>{totalItems}</Text>
+        </View>
+
+        <Divider style={styles.divider} />
+
+        <View style={styles.row}>
+          <Text style={styles.label}>Shipping Address</Text>
+          <Text style={styles.addressText}>
+            {selectedAddress?.address || 'No address selected'}
+          </Text>
+        </View>
+
+        <Divider style={styles.divider} />
+
+        <View style={styles.row}>
+          <Text style={styles.label}>Payment Method</Text>
           <View style={styles.cardInfo}>
-            <Image  source={{ uri: `${selectedAccount?.methodIcon}.jpg` }}  style={styles.cardIcon} />
-            <Text style={styles.cardText}>{selectedAccount?.account}</Text>
+            <Image
+              source={{ uri: `${selectedAccount?.methodIcon || 'https://via.placeholder.com/24'}.jpg` }}
+              style={styles.cardIcon}
+            />
+            <Text style={styles.cardText}>{selectedAccount?.account || 'No card selected'}</Text>
           </View>
         </View>
 
@@ -42,7 +66,7 @@ const SuccessScreen = () => {
           <Text style={styles.label}>Total</Text>
           <View style={styles.totalContainer}>
             <Text style={styles.successLabel}>Success</Text>
-            <Text style={styles.totalAmount}>${totalAmount.toLocaleString()}</Text>
+            <Text style={styles.totalAmount}>${totalAmount.toFixed(2)}</Text>
           </View>
         </View>
       </View>
@@ -54,8 +78,8 @@ const SuccessScreen = () => {
         ))}
       </View>
 
-      <TouchableOpacity 
-        style={styles.backButton} 
+      <TouchableOpacity
+        style={styles.backButton}
         onPress={() => navigation.navigate('HomeScreen')}
       >
         <Text style={styles.backButtonText}>Back to Home</Text>
@@ -90,6 +114,12 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: 'bold',
     color: '#333',
+  },
+  addressText: {
+    fontSize: 14,
+    color: '#777',
+    flex: 1,
+    textAlign: 'right',
   },
   divider: {
     height: 1,

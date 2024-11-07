@@ -4,13 +4,14 @@ import { useSelector, useDispatch } from 'react-redux';
 import { toggleFavorite, removeFromCart, updateCartItemQuantity } from '../reduxToolkit/productsSlice';
 import favorite from '../assets/Cart/Favorite.png';
 import trash from '../assets/Cart/Trash.png';
-import Icon from 'react-native-vector-icons/Ionicons';
+import { useNavigation } from '@react-navigation/native';
 const coupons = [
   { code: 'DISCOUNT10', discount: 0.10 },
   { code: 'SAVE50', discount: 50 },
   { code: 'FREESHIP', discount: 'shipping' },
 ];
-const CartScreen = () => {
+const CartScreen = ({ route }) => {
+  const navigation = useNavigation();
   const dispatch = useDispatch();
   const cartProducts = useSelector((state) => state.products.cartProducts);
   const [freeShipping, setFreeShipping] = useState(false);
@@ -54,7 +55,16 @@ const CartScreen = () => {
   const handleToggleFavorite = (productId) => {
     dispatch(toggleFavorite(productId));
   };
+  const getTotalItemCount = () => {
+    return cartProducts.reduce((total, item) => total + item.quantity, 0);
+  };
 
+  const handleCheckout = () => {
+    navigation.navigate('ShipToScreen', {
+      totalItems: getTotalItemCount(),
+      totalPrice: getTotalPrice(),
+    });
+  }
 
 
   const increaseCount = (productId, size, color) => {
@@ -134,7 +144,7 @@ const CartScreen = () => {
       </View>
       <View style={styles.receipt}>
         <View style={styles.totalItemsContainer}>
-          <Text>Total Items ({cartProducts.length})</Text>
+          <Text>Total Items ({getTotalItemCount()})</Text>
           <Text>${getTotalItemPrice().toFixed(2)}</Text>
         </View>
         <View style={styles.totalItemsContainer}>
@@ -147,7 +157,9 @@ const CartScreen = () => {
           <Text>${getTotalPrice()}</Text>
         </View>
       </View>
-      <TouchableOpacity style={styles.checkout}>
+      <TouchableOpacity style={styles.checkout}
+        onPress={handleCheckout}
+      >
         <Text style={{ color: 'white', fontSize: 18 }}>Check Out</Text>
       </TouchableOpacity>
     </SafeAreaView>
@@ -170,7 +182,7 @@ const Counter = ({ count, increaseCount, decreaseCount }) => (
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F8F9FA', // Màu nền sáng dễ chịu
+    backgroundColor: '#F8F9FA',
     paddingHorizontal: 10,
   },
   header: {

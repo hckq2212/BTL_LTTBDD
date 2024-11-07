@@ -23,6 +23,7 @@ import CategoryScreen from './screens/CategoryScreen';
 import ProductDetailScreen from './screens/Product-detail';
 import FavoriteProduct from './screens/Favorite-product';
 import CartScreen from './screens/CartScreen';
+import ShipToScreen from './screens/ShipTo';
 const Stack = createStackNavigator();
 
 export default function App() {
@@ -53,6 +54,7 @@ export default function App() {
           <Stack.Screen name="FavoriteProduct" component={FavoriteProduct} />
           <Stack.Screen name="FilterSearchScreen" component={FilterSearchScreen} />
           <Stack.Screen name="CartScreen" component={CartScreen} />
+          <Stack.Screen name="ShipToScreen" component={ShipToScreen} />
         </Stack.Navigator>
       </NavigationContainer>
     </Provider>

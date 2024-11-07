@@ -4,31 +4,32 @@ import { RadioButton, Divider, IconButton } from 'react-native-paper';
 import { useNavigation } from '@react-navigation/native';
 import axios from 'axios';
 
-const PaymentMethodsScreen = () => {
+const PaymentMethodsScreen = ({ route }) => {
+  const { totalItems, totalPrice, selectedAddress } = route.params;
   const [paymentMethods, setPaymentMethods] = useState([]);
   const [selectedAccount, setSelectedAccount] = useState(null);
   const [expandedMethod, setExpandedMethod] = useState(null);
   const navigation = useNavigation();
 
-  const subtotal = 2800;
-  const tax = subtotal * 0.1;
-  const fees = 0;
-  const totalAmount = subtotal + tax + fees;
 
- useEffect(() => {
-  const fetchPaymentMethods = async () => {
-    try {
-      const response = await axios.get('https://67231a7a2108960b9cc6ac7c.mockapi.io/paymentMethods');
-      setPaymentMethods(response.data);
-    } catch (error) {
-      console.error("Lỗi khi gọi API: ", error);
-    }
-  };
+  const subtotal = parseFloat(totalPrice).toFixed(2);
+  const tax = parseFloat((subtotal * 0.1)).toFixed(2);
+  const totalAmount = (parseFloat(subtotal) + parseFloat(tax)).toFixed(2);
 
-  const unsubscribe = navigation.addListener('focus', fetchPaymentMethods);
+  useEffect(() => {
+    const fetchPaymentMethods = async () => {
+      try {
+        const response = await axios.get('https://67231a7a2108960b9cc6ac7c.mockapi.io/paymentMethods');
+        setPaymentMethods(response.data);
+      } catch (error) {
+        console.error("Lỗi khi gọi API: ", error);
+      }
+    };
 
-  return unsubscribe;
-}, [navigation]);
+    const unsubscribe = navigation.addListener('focus', fetchPaymentMethods);
+
+    return unsubscribe;
+  }, [navigation]);
 
 
   const handleSelectAccount = (method, account) => {
@@ -87,7 +88,19 @@ const PaymentMethodsScreen = () => {
       <ScrollView contentContainerStyle={styles.scrollView}>
         <View style={styles.totalContainer}>
           <Text style={styles.totalLabel}>TOTAL</Text>
-          <Text style={styles.totalAmount}>${totalAmount.toLocaleString()}</Text>
+          <Text style={styles.totalAmount}>${totalAmount}</Text>
+        </View>
+
+        <View style={styles.priceContainer}>
+          <View style={styles.priceContainer}>
+            <Text style={styles.priceLabel}>Price</Text>
+            <Text style={styles.priceAmount}>${subtotal}</Text>
+          </View>
+          <View style={styles.taxContainer}>
+            <Text style={styles.taxLabel}>Tax</Text>
+            <Text style={styles.taxAmount}>${tax}</Text>
+          </View>
+
         </View>
 
         <Text style={styles.header}>Chọn phương thức thanh toán</Text>
@@ -103,8 +116,9 @@ const PaymentMethodsScreen = () => {
             navigation.navigate('SuccessScreen', {
               subtotal,
               tax,
-              fees,
+              totalItems,
               selectedAccount,
+              selectedAddress,
             });
           }}
           style={[
@@ -123,12 +137,11 @@ const PaymentMethodsScreen = () => {
     </SafeAreaView>
   );
 };
-
 const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#f7f8fa',
-    paddingTop:20
+    paddingTop: 20,
   },
   scrollView: {
     paddingHorizontal: 20,
@@ -137,9 +150,17 @@ const styles = StyleSheet.create({
   totalContainer: {
     alignItems: 'center',
     marginBottom: 20,
+    backgroundColor: '#ffffff',
+    padding: 15,
+    borderRadius: 10,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 5,
+    elevation: 3,
   },
   totalLabel: {
-    fontSize: 16,
+    fontSize: 18,
     fontWeight: 'bold',
     color: '#555',
     marginBottom: 5,
@@ -150,10 +171,44 @@ const styles = StyleSheet.create({
     color: '#333',
   },
   header: {
-    fontSize: 18,
+    fontSize: 20,
     fontWeight: 'bold',
     color: '#223263',
     marginBottom: 20,
+  },
+  priceContainer: {
+    backgroundColor: '#ffffff',
+    padding: 15,
+    borderRadius: 10,
+    marginBottom: 20,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 5,
+    elevation: 3,
+  },
+  taxContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 10,
+  },
+  taxLabel: {
+    fontSize: 16,
+    color: '#555',
+  },
+  taxAmount: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#333',
+  },
+  priceLabel: {
+    fontSize: 16,
+    color: '#555',
+  },
+  priceAmount: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#333',
   },
   paymentMethodContainer: {
     marginBottom: 20,
@@ -163,6 +218,14 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingVertical: 10,
+    backgroundColor: '#ffffff',
+    paddingHorizontal: 15,
+    borderRadius: 10,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 5,
+    elevation: 2,
   },
   icon: {
     width: 40,
@@ -176,7 +239,11 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   accountsContainer: {
-    paddingLeft: 50,
+    paddingLeft: 20,
+    paddingVertical: 10,
+    backgroundColor: '#f1f3f6',
+    borderBottomLeftRadius: 10,
+    borderBottomRightRadius: 10,
   },
   accountOption: {
     flexDirection: 'row',
@@ -186,6 +253,7 @@ const styles = StyleSheet.create({
     borderColor: '#e0e0e0',
     borderRadius: 5,
     marginBottom: 5,
+    backgroundColor: '#ffffff',
   },
   selectedAccountOption: {
     borderColor: '#40bfff',
@@ -218,5 +286,6 @@ const styles = StyleSheet.create({
     fontSize: 16,
   },
 });
+
 
 export default PaymentMethodsScreen;

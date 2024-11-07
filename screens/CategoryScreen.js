@@ -1,38 +1,46 @@
 import React from 'react';
 import { Text, SafeAreaView, StyleSheet, Image, View, TouchableOpacity, FlatList } from 'react-native';
 import category from '../data/Category';
+import { useNavigation } from '@react-navigation/native';
 
+const CategoryScreen = () => {
+  const navigation = useNavigation();
 
-const renderCategory = ({ item }) => {
-  return (
+  const renderCategory = ({ item }) => (
     <TouchableOpacity
-      style={styles.item}
+      style={styles.categoryItem}
+      onPress={() => navigation.navigate('SearchResult', { searchQuery: '', selectedCategory: item.type })}
       accessible
       accessibilityLabel={`Category: ${item.type}`}
     >
-      <Image source={item.image} style={styles.itemImage} />
-      <Text style={styles.itemText}>{item.type}</Text>
+      <Image source={item.image} style={styles.categoryImage} />
+      <Text style={styles.categoryText}>{item.type}</Text>
     </TouchableOpacity>
   );
-};
 
-const CategoryScreen = () => {
   return (
     <SafeAreaView style={styles.container}>
-      <SafeAreaView style={styles.header}>
-        <TouchableOpacity><Image source={require('../assets/Category/Left.png')} style={{ marginLeft: 10, marginRight: 10 }} /></TouchableOpacity>
+      {/* Header */}
+      <View style={styles.header}>
+        <TouchableOpacity onPress={() => navigation.goBack()}>
+          <Image
+            source={require('../assets/Category/Left.png')}
+            style={styles.headerIcon}
+          />
+        </TouchableOpacity>
         <Text style={styles.headerText}>Category</Text>
-      </SafeAreaView>
-      <View style={styles.hr} />
+      </View>
 
-      <SafeAreaView style={styles.categoryView}>
-        <FlatList
-          data={category}
-          renderItem={renderCategory}
-          keyExtractor={(item) => item.type}
-          showsVerticalScrollIndicator={false}
-        />
-      </SafeAreaView>
+      <View style={styles.separator} />
+
+      {/* Categories List */}
+      <FlatList
+        data={category}
+        renderItem={renderCategory}
+        keyExtractor={(item) => item.type}
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={styles.categoryList}
+      />
     </SafeAreaView>
   );
 };
@@ -41,48 +49,54 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#ffffff',
-    padding: 8,
   },
   header: {
-    marginTop: 20,
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 15,
+    paddingVertical: 10,
+    paddingHorizontal: 15,
+    backgroundColor: '#f7f8fa',
   },
   headerIcon: {
-    marginLeft: 10,
-    marginRight: 10,
-    width: 20,
-    height: 20,
+    width: 24,
+    height: 24,
     resizeMode: 'contain',
+    marginRight: 10,
   },
   headerText: {
-    fontWeight: 'bold',
-    fontSize: 15,
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#223263',
   },
-  hr: {
-    width: '100%',
-    borderBottomColor: '#edf1ff',
-    borderBottomWidth: 2,
+  separator: {
+    height: 1,
+    backgroundColor: '#edf1ff',
+    marginHorizontal: 15,
   },
-  categoryView: {
-    flex: 1,
+  categoryList: {
+    paddingVertical: 10,
   },
-  item: {
+  categoryItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginTop: 20,
-    marginLeft: 15,
+    padding: 15,
+    marginVertical: 5,
+    backgroundColor: '#f9f9f9',
+    borderRadius: 8,
+    marginHorizontal: 15,
+    borderWidth: 1,
+    borderColor: '#edf1ff',
   },
-  itemImage: {
-    marginRight: 15,
-    width: 20,
-    height: 20,
+  categoryImage: {
+    width: 40,
+    height: 40,
     resizeMode: 'contain',
+    marginRight: 15,
   },
-  itemText: {
-    fontSize: 14,
-    color: '#333',
+  categoryText: {
+    fontSize: 16,
+    color: '#223263',
+    fontWeight: '500',
   },
 });
 
