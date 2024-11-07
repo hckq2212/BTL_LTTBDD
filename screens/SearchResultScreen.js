@@ -7,6 +7,7 @@ import filter from '../assets/SearchResult/Filter.png';
 import sort from '../assets/SearchResult/Sort.png';
 import search from '../assets/SearchResult/Search.png';
 import downArrow from '../assets/SearchResult/Down.png';
+import FooterNav from '../components/FooterNav';
 
 const SearchResultScreen = ({ route, navigation }) => {
   const { searchQuery: initialQuery = '', filters, selectedCategory: initialCategory } = route.params || {};
@@ -155,6 +156,7 @@ const SearchResultScreen = ({ route, navigation }) => {
         numColumns={2}
         contentContainerStyle={styles.productList}
       />
+      <FooterNav navigation={navigation} />
     </SafeAreaView>
   );
 };

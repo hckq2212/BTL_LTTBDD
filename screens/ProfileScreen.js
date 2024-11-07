@@ -1,9 +1,20 @@
-import React, { useState } from 'react';
-import { StyleSheet, View, TouchableOpacity, Text, Image, SafeAreaView } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { StyleSheet, View, TouchableOpacity, Text, Image, SafeAreaView, Alert } from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { useNavigation, useRoute } from '@react-navigation/native';
+import { useSelector, useDispatch } from 'react-redux';
+import { logout } from '../reduxToolkit/productsSlice';
 
 const ProfileInfo = () => {
+  const accountLoggedIn = useSelector((state) => state.products.accountLoggedIn);
+  const profiles = useSelector((state) => state.products.profile);
+
+  const userProfile = profiles.find(profile => profile.account_id === accountLoggedIn?.id);
+
+console.log('accountLoggedIn:', accountLoggedIn);
+console.log('profiles:', profiles);
+console.log('userProfile:', userProfile);
+
   return (
     <View style={profileInfoStyles.container}>
       <Image
@@ -11,8 +22,8 @@ const ProfileInfo = () => {
         style={profileInfoStyles.image}
       />
       <View>
-        <Text style={profileInfoStyles.name}>Minh Duc</Text>
-        <Text style={profileInfoStyles.username}>@ducvu</Text>
+        <Text style={profileInfoStyles.name}>{userProfile ? userProfile.name : 'User Name'}</Text>
+        <Text style={profileInfoStyles.username}>{accountLoggedIn ? `@${accountLoggedIn.name}` : '@username'}</Text>
       </View>
     </View>
   );
@@ -61,14 +72,18 @@ const ProfileItem = ({ icon, label, value, onPress }) => {
 const ProfileScreen = () => {
   const navigation = useNavigation();
   const route = useRoute();
+  const dispatch = useDispatch();
+  const accountLoggedIn = useSelector((state) => state.products.accountLoggedIn);
+  const profiles = useSelector((state) => state.products.profile);
 
-  const [gender, setGender] = useState('Male');
-  const [birthday, setBirthday] = useState('2003-10-14');
-  const [email, setEmail] = useState('minhduc@gmail.com');
-  const [phoneNumber, setPhoneNumber] = useState('0123456789');
-  const [password, setPassword] = useState('oldPassword123');  
+  const userProfile = profiles.find(profile => profile.account_id === (accountLoggedIn ? accountLoggedIn.id : null));
 
-  React.useEffect(() => {
+  const [gender, setGender] = useState(userProfile?.gender || 'Not specified');
+  const [birthday, setBirthday] = useState(userProfile?.birthdate || 'Not specified');
+  const [email, setEmail] = useState(accountLoggedIn?.email || 'Not specified');
+  const [phoneNumber, setPhoneNumber] = useState(userProfile?.phoneNumber || 'Not specified');
+
+  useEffect(() => {
     if (route.params?.updatedValue) {
       switch (route.params.field) {
         case 'Gender':
@@ -83,18 +98,30 @@ const ProfileScreen = () => {
         case 'Phone Number':
           setPhoneNumber(route.params.updatedValue);
           break;
-        case 'Password':
-          setPassword(route.params.updatedValue);
-          break;
         default:
           break;
       }
     }
   }, [route.params]);
 
+  const handleLogout = () => {
+    Alert.alert(
+      "Logout",
+      "Are you sure you want to logout?",
+      [
+        { text: "Cancel", style: "cancel" },
+        { text: "Logout", onPress: () => {
+            dispatch(logout()); 
+            navigation.navigate('LoginScreen');
+          } 
+        },
+      ]
+    );
+  };
+
   return (
     <SafeAreaView style={styles.screen}>
-      <ProfileInfo/>
+      <ProfileInfo />
       <ProfileItem
         icon={require('../assets/Profile/Gender.png')}
         label='Gender'
@@ -117,14 +144,17 @@ const ProfileScreen = () => {
         icon={require('../assets/Profile/Phone.png')}
         label='Phone Number'
         value={phoneNumber}
-        onPress={() => navigation.navigate('Phone Number', { value: phoneNumber, field: 'Phone Number' })}
+        onPress={() => navigation.navigate('PhoneNumber', { value: phoneNumber, field: 'PhoneNumber' })}
       />
       <ProfileItem
         icon={require('../assets/Profile/PasswordBlue.png')}
         label='Change Password'
         value='••••••••'
-        onPress={() => navigation.navigate('Password', { value: password, field: 'Password' })} 
+        onPress={() => navigation.navigate('Password', { field: 'Password' })}
       />
+      <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
+        <Text style={styles.logoutButtonText}>Logout</Text>
+      </TouchableOpacity>
     </SafeAreaView>
   );
 };
@@ -175,6 +205,18 @@ const styles = StyleSheet.create({
     backgroundColor: '#f2f2f2',
     paddingHorizontal: 20,
     paddingVertical: 20,
+  },
+  logoutButton: {
+    backgroundColor: '#FF4D4D',
+    padding: 15,
+    borderRadius: 10,
+    alignItems: 'center',
+    marginTop: 20,
+  },
+  logoutButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: 'bold',
   },
 });
 

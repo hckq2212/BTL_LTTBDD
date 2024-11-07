@@ -1,13 +1,8 @@
-import React, { useState } from 'react';
-import { View, Text, Image, StyleSheet, TouchableOpacity, TextInput, Alert, SafeAreaView } from 'react-native';
-
-const HomeIndicator = () => {
-  return (
-    <View style={styles.indicatorContainer}>
-      <View style={styles.homeIndicator} />
-    </View>
-  );
-};
+import React, { useState, useEffect } from 'react';
+import { View, Text, Image, StyleSheet, TouchableOpacity, TextInput, Alert,SafeAreaView } from 'react-native';
+import { useSelector, useDispatch } from 'react-redux';
+import { login } from '../reduxToolkit/productsSlice';
+import { useNavigation } from '@react-navigation/native';
 
 const WelcomeText = () => {
   return (
@@ -18,64 +13,12 @@ const WelcomeText = () => {
   );
 };
 
-const EmailInput = ({ value, onChangeText, errorMessage }) => {
-  return (
-    <>
-      <View style={styles.inputContainer}>
-        <Image
-          source={require('../assets/Login/mail.png')}
-          style={styles.inputIcon}
-        />
-        <TextInput
-          style={styles.textInput}
-          placeholder="Your Email"
-          placeholderTextColor="#9098b1"
-          value={value}
-          onChangeText={onChangeText}
-          keyboardType="email-address"
-        />
-      </View>
-      {errorMessage ? <Text style={styles.errorText}>{errorMessage}</Text> : null}
-    </>
-  );
-};
-
-const PasswordInput = ({ value, onChangeText, errorMessage }) => {
-  return (
-    <>
-      <View style={styles.inputContainer}>
-        <Image 
-          source={require('../assets/Login/Password.png')}
-          style={styles.inputIcon} 
-        />
-        <TextInput
-          placeholder="Password"
-          placeholderTextColor="#9098b1"
-          secureTextEntry={true}
-          style={styles.textInput}
-          value={value}
-          onChangeText={onChangeText}
-        />
-      </View>
-      {errorMessage ? <Text style={styles.errorText}>{errorMessage}</Text> : null}
-    </>
-  );
-};
-
-const LoginButton = ({ onPress }) => {
-  return (
-    <TouchableOpacity style={styles.loginButton} onPress={onPress}>
-      <Text style={styles.buttonText}>Sign In</Text>
-    </TouchableOpacity>
-  );
-};
-
 const GoogleLoginButton = () => {
   return (
     <TouchableOpacity style={styles.socialButton}>
-      <Image 
+      <Image
         source={require('../assets/Login/google.png')}
-        style={styles.socialLogo} 
+        style={styles.socialLogo}
       />
       <Text style={styles.socialText}>Login with Google</Text>
     </TouchableOpacity>
@@ -104,19 +47,9 @@ const OrLine = () => {
   );
 };
 
-const ForgotPasswordLink = () => {
-  const handlePress = () => Alert.alert('Forgot Password', 'Redirecting...');
-
-  return (
-    <TouchableOpacity onPress={handlePress} style={styles.centered}>
-      <Text style={styles.forgotPassword}>Forgot Password?</Text>
-    </TouchableOpacity>
-  );
-};
-
-const RegisterLink = () => {
+const RegisterLink = ({ navigation }) => {
   const handlePress = () => {
-    Alert.alert('Registration', 'Redirecting to registration page.');
+    navigation.navigate('RegisterScreen');
   };
 
   return (
@@ -128,11 +61,23 @@ const RegisterLink = () => {
     </View>
   );
 };
-
 const LoginScreen = () => {
+  const navigation = useNavigation();
+  const dispatch = useDispatch();
+
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [errors, setErrors] = useState({});
+  const loginError = useSelector((state) => state.products.loginError);
+  const loginSuccess = useSelector((state) => state.products.loginSuccess);
+
+  useEffect(() => {
+    if (loginSuccess) {
+      navigation.navigate('HomeScreen');
+    } else if (loginError) {
+      Alert.alert('Login Error', loginError);
+    }
+  }, [loginSuccess, loginError, navigation]);
 
   const validateForm = () => {
     let isValid = true;
@@ -149,9 +94,6 @@ const LoginScreen = () => {
     if (password.trim() === '') {
       newErrors.password = 'Password is required';
       isValid = false;
-    } else if (password.length < 6) {
-      newErrors.password = 'Password must be at least 6 characters';
-      isValid = false;
     }
 
     setErrors(newErrors);
@@ -160,7 +102,7 @@ const LoginScreen = () => {
 
   const handleSignIn = () => {
     if (validateForm()) {
-      Alert.alert('Success', 'You have successfully signed in!');
+      dispatch(login({ email, password }));
     }
   };
 
@@ -168,14 +110,38 @@ const LoginScreen = () => {
     <View style={styles.screen}>
       <Image source={require('../assets/Login/logo.png')} style={styles.logo} />
       <WelcomeText />
-      <EmailInput value={email} onChangeText={setEmail} errorMessage={errors.email} />
-      <PasswordInput value={password} onChangeText={setPassword} errorMessage={errors.password} />
-      <LoginButton onPress={handleSignIn} />
-      <OrLine />
+
+      <View style={styles.inputContainer}>
+        <TextInput
+          style={styles.textInput}
+          placeholder="Your Email"
+          placeholderTextColor="#9098b1"
+          value={email}
+          onChangeText={setEmail}
+          keyboardType="email-address"
+        />
+      </View>
+      {errors.email && <Text style={styles.errorText}>{errors.email}</Text>}
+
+      <View style={styles.inputContainer}>
+        <TextInput
+          placeholder="Password"
+          placeholderTextColor="#9098b1"
+          secureTextEntry
+          style={styles.textInput}
+          value={password}
+          onChangeText={setPassword}
+        />
+      </View>
+      {errors.password && <Text style={styles.errorText}>{errors.password}</Text>}
+            <TouchableOpacity style={styles.loginButton} onPress={handleSignIn}>
+        <Text style={styles.buttonText}>Sign In</Text>
+      </TouchableOpacity>
+<OrLine />
       <GoogleLoginButton />
       <FacebookLoginButton />
-      <ForgotPasswordLink />
-      <RegisterLink />
+            <RegisterLink navigation={navigation} />
+
     </View>
   );
 };
@@ -186,12 +152,41 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: 50,
   },
   logo: {
     width: 72,
     height: 72,
     marginBottom: 20,
+  },
+  inputContainer: {
+    width: '90%',
+    marginVertical: 10,
+    borderWidth: 1,
+    borderColor: '#ccc',
+    borderRadius: 8,
+    paddingHorizontal: 10,
+  },
+  textInput: {
+    height: 40,
+    fontSize: 16,
+  },
+  errorText: {
+    color: 'red',
+    fontSize: 12,
+    textAlign: 'left',
+    width: '90%',
+  },
+  loginButton: {
+    backgroundColor: '#40bfff',
+    borderRadius: 8,
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    marginTop: 20,
+  },
+  buttonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '600',
   },
   welcomeContainer: {
     alignItems: 'center',
@@ -208,52 +203,6 @@ const styles = StyleSheet.create({
   welcomeSubtitle: {
     fontSize: 14,
     color: '#9098b1',
-    textAlign: 'center',
-  },
-  inputContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: '#ebf0ff',
-    borderRadius: 5,
-    paddingVertical: 12,
-    paddingHorizontal: 16,
-    backgroundColor: '#fff',
-    marginVertical: 5,
-    width: 343,
-  },
-  inputIcon: {
-    width: 20,
-    height: 16,
-    marginRight: 10,
-  },
-  textInput: {
-    flex: 1,
-    fontSize: 12,
-    lineHeight: 22,
-    color: '#9098b1',
-    fontFamily: 'Poppins',
-  },
-  errorText: {
-    color: 'red',
-    fontSize: 10,
-    marginBottom: 5,
-    textAlign: 'center',
-  },
-  loginButton: {
-    backgroundColor: '#40bfff',
-    borderRadius: 5,
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: 16,
-    marginVertical: 10,
-    width: 343,
-  },
-  buttonText: {
-    color: '#ffffff',
-    fontSize: 14,
-    fontWeight: '700',
-    letterSpacing: 0.5,
     textAlign: 'center',
   },
   socialButton: {
@@ -296,16 +245,7 @@ const styles = StyleSheet.create({
     color: '#9098b1',
     marginHorizontal: 8,
   },
-  centered: {
-    alignItems: 'center',
-  },
-  forgotPassword: {
-    color: '#40bfff',
-    fontSize: 12,
-    fontWeight: '700',
-    marginVertical: 5,
-  },
-  registerContainer: {
+registerContainer: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
@@ -318,18 +258,6 @@ const styles = StyleSheet.create({
   registerLink: {
     color: '#5c61f4',
     fontWeight: '700',
-  },
-  indicatorContainer: {
-    width: 375,
-    height: 34,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  homeIndicator: {
-    width: 134,
-    height: 5,
-    backgroundColor: '#DFE1E5',
-    borderRadius: 2.5,
   },
 });
 

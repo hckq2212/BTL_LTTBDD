@@ -1,45 +1,38 @@
-import  { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, TextInput, Alert } from 'react-native';
+import React, { useState } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
+import { useDispatch, useSelector } from 'react-redux';
+import { updateUserProfile } from '../reduxToolkit/productsSlice';
 
-const EditBirthdayScreen = ({ navigation, route }) => {
-  const [birthday, setBirthday] = useState(route.params.value);
+const EditBirthdayScreen = ({ navigation }) => {
+  const dispatch = useDispatch();
+  const profiles = useSelector((state) => state.products.profile);
+  const accountLoggedIn = useSelector((state) => state.products.accountLoggedIn);
+
+  const userProfile = profiles.find(profile => profile.account_id === (accountLoggedIn ? accountLoggedIn.id : null));
+  const [birthday, setBirthday] = useState(new Date(userProfile.birthdate)); 
   const [showDatePicker, setShowDatePicker] = useState(false);
 
   const handleSave = () => {
-    if (!birthday) {
-      Alert.alert("Validation Error", "Birthday cannot be empty");
-      return;
-    }
-
-    const selectedDate = new Date(birthday);
-    const currentDate = new Date();
-    if (selectedDate > currentDate) {
-      Alert.alert("Validation Error", "Birthday cannot be in the future");
-      return;
-    }
-
-    navigation.navigate('Profile', { updatedValue: birthday, field: 'Birthday' });
+    dispatch(updateUserProfile({ id: userProfile.id, updatedData: { birthdate: birthday.toISOString().split('T')[0] } }));
+    navigation.navigate('ProfileScreen', { updatedValue: birthday.toISOString().split('T')[0], field: 'Birthday' });
   };
 
   return (
     <View style={styles.container}>
-      <TouchableOpacity onPress={() => setShowDatePicker(true)}>
-        <TextInput
-          style={styles.input}
-          value={birthday}
-          editable={false}
-        />
+      <Text style={styles.label}>Select Your Birthday:</Text>
+      <TouchableOpacity onPress={() => setShowDatePicker(true)} style={styles.dateInput}>
+        <Text style={styles.dateText}>{birthday.toISOString().split('T')[0]}</Text> 
       </TouchableOpacity>
       {showDatePicker && (
         <DateTimePicker
-          value={new Date(birthday)}
+          value={birthday}
           mode="date"
           display="default"
           onChange={(event, selectedDate) => {
             setShowDatePicker(false);
             if (selectedDate) {
-              setBirthday(selectedDate.toISOString().split('T')[0]);
+              setBirthday(selectedDate);
             }
           }}
         />
@@ -57,15 +50,24 @@ const styles = StyleSheet.create({
     padding: 16,
     backgroundColor: '#fff',
   },
-  input: {
+  label: {
+    fontSize: 18,
+    marginBottom: 10,
+  },
+  dateInput: {
+    padding: 10,
     borderWidth: 1,
     borderColor: '#ccc',
-    padding: 12,
-    borderRadius: 10,
+    borderRadius: 5,
     marginBottom: 20,
+    alignItems: 'center',
+  },
+  dateText: {
+    fontSize: 16,
+    color: '#333',
   },
   saveButton: {
-    backgroundColor: '#00f',
+    backgroundColor: '#007BFF',
     padding: 15,
     borderRadius: 10,
     alignItems: 'center',

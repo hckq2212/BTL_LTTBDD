@@ -24,36 +24,68 @@ import ProductDetailScreen from './screens/Product-detail';
 import FavoriteProduct from './screens/Favorite-product';
 import CartScreen from './screens/CartScreen';
 import ShipToScreen from './screens/ShipTo';
+import MainLayout from './components/MainLayout';
+
 const Stack = createStackNavigator();
 
 export default function App() {
   return (
     <Provider store={store}>
       <NavigationContainer>
-        <Stack.Navigator initialRouteName="HomeScreen">
+        <Stack.Navigator initialRouteName="LoginScreen">
           <Stack.Screen
-            name="HomeScreen"
-            component={HomeScreen}
-            options={{ headerShown: false }} // Hide header if needed
+            name="LoginScreen"
+            component={LoginScreen}
+            options={{ headerShown: false }}
           />
+          <Stack.Screen name="HomeScreen" options={{ headerShown: false }}>
+            {(props) => (
+              <MainLayout {...props}>
+                <HomeScreen />
+              </MainLayout>
+            )}
+          </Stack.Screen>
+          <Stack.Screen name="CategoryScreen" options={{ headerShown: false }}>
+            {(props) => (
+              <MainLayout {...props}>
+                <CategoryScreen />
+              </MainLayout>
+            )}
+          </Stack.Screen>
+          <Stack.Screen name="CartScreen" options={{ headerShown: false }}>
+            {(props) => (
+              <MainLayout {...props}>
+                <CartScreen />
+              </MainLayout>
+            )}
+          </Stack.Screen>
+          <Stack.Screen name="ProfileScreen" options={{ headerShown: false }}>
+            {(props) => (
+              <MainLayout {...props}>
+                <ProfileScreen />
+              </MainLayout>
+            )}
+          </Stack.Screen>
           <Stack.Screen name="ProductDetailScreen" component={ProductDetailScreen} />
           <Stack.Screen name="PaymentMethodsScreen" component={PaymentMethodsScreen} />
           <Stack.Screen name="SearchScreen" component={SearchScreen} />
           <Stack.Screen name="SearchResult" component={SearchResultScreen} />
-          <Stack.Screen name="ProfileScreen" component={ProfileScreen} />
-          <Stack.Screen name="LoginScreen" component={LoginScreen} />
           <Stack.Screen name="SuccessScreen" component={SuccessScreen} />
           <Stack.Screen name="AddPaymentMethodScreen" component={AddPaymentMethodScreen} />
           <Stack.Screen name="RegisterScreen" component={RegisterScreen} />
           <Stack.Screen name="Gender" component={EditGenderScreen} />
           <Stack.Screen name="Birthday" component={EditBirthdayScreen} />
           <Stack.Screen name="Email" component={EditEmailScreen} />
-          <Stack.Screen name="Phone Number" component={EditPhoneNumberScreen} />
+          <Stack.Screen name="PhoneNumber" component={EditPhoneNumberScreen} />
           <Stack.Screen name="Password" component={EditPasswordScreen} />
-          <Stack.Screen name="CategoryScreen" component={CategoryScreen} />
-          <Stack.Screen name="FavoriteProduct" component={FavoriteProduct} />
+          <Stack.Screen name="FavoriteProduct" options={{ headerShown: false }}>
+            {(props) => (
+              <MainLayout {...props}>
+                <FavoriteProduct />
+              </MainLayout>
+            )}
+          </Stack.Screen>
           <Stack.Screen name="FilterSearchScreen" component={FilterSearchScreen} />
-          <Stack.Screen name="CartScreen" component={CartScreen} />
           <Stack.Screen name="ShipToScreen" component={ShipToScreen} />
         </Stack.Navigator>
       </NavigationContainer>

@@ -1,8 +1,15 @@
-import  { useState } from 'react';
+import React, { useState } from 'react';
 import { View, Text, StyleSheet, TextInput, TouchableOpacity, Alert } from 'react-native';
+import { useDispatch, useSelector } from 'react-redux';
+import { updateAccount } from '../reduxToolkit/productsSlice'; 
 
-const EditEmailScreen = ({ navigation, route }) => {
-  const [email, setEmail] = useState(route.params.value);
+const EditEmailScreen = ({ navigation }) => {
+  const dispatch = useDispatch();
+  const profiles = useSelector((state) => state.products.profile);
+  const accountLoggedIn = useSelector((state) => state.products.accountLoggedIn);
+
+  const userProfile = profiles.find(profile => profile.account_id === (accountLoggedIn ? accountLoggedIn.id : null));
+  const [email, setEmail] = useState(accountLoggedIn?.email); 
 
   const handleSave = () => {
     if (!email) {
@@ -17,11 +24,18 @@ const EditEmailScreen = ({ navigation, route }) => {
       return;
     }
 
-    navigation.navigate('Profile', { updatedValue: email, field: 'Email' });
+    dispatch(updateAccount({ id: userProfile.id, updatedData: { email } }));
+
+    if (accountLoggedIn && accountLoggedIn.id === userProfile.id) {
+      dispatch(updateAccount({ id: accountLoggedIn.id, updatedData: { email } }));
+    }
+
+    navigation.navigate('ProfileScreen', { updatedValue: email, field: 'Email' });
   };
 
   return (
     <View style={styles.container}>
+      <Text style={styles.label}>Enter Your New Email:</Text>
       <TextInput
         style={styles.input}
         value={email}
@@ -42,6 +56,10 @@ const styles = StyleSheet.create({
     padding: 16,
     backgroundColor: '#fff',
   },
+  label: {
+    fontSize: 18,
+    marginBottom: 10,
+  },
   input: {
     borderWidth: 1,
     borderColor: '#ccc',
@@ -50,7 +68,7 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   saveButton: {
-    backgroundColor: '#00f',
+    backgroundColor: '#007BFF',
     padding: 15,
     borderRadius: 10,
     alignItems: 'center',

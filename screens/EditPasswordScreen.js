@@ -1,8 +1,16 @@
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { View, Text, StyleSheet, TextInput, TouchableOpacity, Alert } from 'react-native';
+import { useDispatch, useSelector } from 'react-redux';
+import { updateAccount } from '../reduxToolkit/productsSlice'; 
 
-const EditPasswordScreen = ({ navigation, route }) => {
-  const [oldPassword] = useState(route.params.value);
+const EditPasswordScreen = ({ navigation }) => {
+  const dispatch = useDispatch();
+  const profiles = useSelector((state) => state.products.profile);
+  const accountLoggedIn = useSelector((state) => state.products.accountLoggedIn);
+
+  const userProfile = profiles.find(profile => profile.account_id === (accountLoggedIn ? accountLoggedIn.id : null));
+  const [oldPassword] = useState(accountLoggedIn.password);
+
   const [oldPasswordInput, setOldPasswordInput] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -42,8 +50,13 @@ const EditPasswordScreen = ({ navigation, route }) => {
       Alert.alert("Validation Error", "New passwords do not match");
       return;
     }
+    dispatch(updateAccount({ id: userProfile.id, updatedData: { password: newPassword } }));
 
-    navigation.navigate('Profile', { updatedValue: newPassword, field: 'Password' });
+    if (accountLoggedIn && accountLoggedIn.id === userProfile.id) {
+      dispatch(updateAccount({ id: accountLoggedIn.id, updatedData: { password: newPassword } }));
+    }
+
+    navigation.navigate('ProfileScreen', { updatedValue: newPassword, field: 'Password' });
   };
 
   return (
@@ -90,7 +103,7 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   saveButton: {
-    backgroundColor: '#00f',
+    backgroundColor: '#007BFF',
     padding: 15,
     borderRadius: 10,
     alignItems: 'center',
