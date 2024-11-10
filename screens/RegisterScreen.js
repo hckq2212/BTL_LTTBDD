@@ -1,8 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { StyleSheet, View, Text, Image, TextInput, TouchableOpacity, Alert, SafeAreaView, ScrollView } from 'react-native';
-import { useDispatch } from 'react-redux';
-import { addAccount, addUserProfile } from '../reduxToolkit/productsSlice';
+import { useDispatch, useSelector } from 'react-redux';
+import { register, resetRegisterError } from '../reduxToolkit/productsSlice';
 import { useNavigation } from '@react-navigation/native';
+import { ref, set } from 'firebase/database';
+import { realtimeDB } from '../firebaseConfig';
 
 const SubHeaderText = () => (
   <Text style={styles.subHeaderText}>Let’s Get Started</Text>
@@ -50,8 +52,7 @@ const RegisterScreen = () => {
   const [phoneNumber, setPhoneNumber] = useState('');
   const [errors, setErrors] = useState({});
 
-  const defaultGender = 'Male';
-  const defaultDate = '2003-01-01';
+  const registerErrors = useSelector((state) => state.products.registerErrors);
 
   const validateForm = () => {
     const newErrors = {};
@@ -97,33 +98,29 @@ const RegisterScreen = () => {
     setErrors(newErrors);
     return isValid;
   };
-
-  const handleSignUp = () => {
+  const handleSignUp = async () => {
     if (validateForm()) {
       try {
-        const accountId = Date.now();
-                console.log(accountId)
+        const user = await dispatch(register({ email, password, fullName, phoneNumber })).unwrap();
 
-        dispatch(addAccount({ id: accountId, name: fullName, email, password }));
-        console.log(accountId)
-        const id=Date.now();
-        dispatch(
-          addUserProfile({
-            id: id, 
-            name: fullName,
-            phoneNumber,
-            gender: defaultGender,
-            birthdate: defaultDate,
-            account_id: accountId,
-          })
-        );
-
+        console.log('User UID:', user.uid);
         Alert.alert('Success', 'You have successfully signed up!');
+        navigation.navigate('HomeScreen');
       } catch (error) {
-        Alert.alert('Error', error.message);
+        console.error('Error while saving profile:', error);
+        Alert.alert('Register Error', error.error || 'Failed to save profile info.');
       }
     }
   };
+
+
+
+  useEffect(() => {
+    if (registerErrors.length > 0) {
+      const latestError = registerErrors[registerErrors.length - 1];
+      Alert.alert('Register Error', latestError.error);
+    }
+  }, [registerErrors]);
 
   return (
     <ScrollView contentContainerStyle={styles.scrollContainer}>

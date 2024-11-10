@@ -1,251 +1,364 @@
-import { createSlice } from '@reduxjs/toolkit';
-import Products from '../data/data.js';
+import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
+import { auth, realtimeDB } from '../firebaseConfig';
+import { createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut } from 'firebase/auth';
+import { ref, set, get, remove, update } from 'firebase/database';
 
+// Async Thunks
+
+// Đăng ký tài khoản
+export const register = createAsyncThunk(
+    'auth/register',
+    async ({ email, password, fullName, phoneNumber }, { rejectWithValue }) => {
+        try {
+            const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+            const user = userCredential.user;
+
+            const profileData = {
+                fullName: fullName || 'N/A',
+                phoneNumber: phoneNumber || 'N/A',
+                email: email,
+                birthdate: "2003-01-01", // Default value
+                gender: "Male" // Default value
+            };
+
+            await set(ref(realtimeDB, `profileInfo/${user.uid}`), profileData);
+
+            return user.uid; // Chỉ trả về UID
+        } catch (error) {
+            return rejectWithValue({ id: Date.now(), error: error.message });
+        }
+    }
+);
+
+// Đăng nhập
+export const login = createAsyncThunk(
+    'auth/login',
+    async ({ email, password }, { rejectWithValue }) => {
+        try {
+            console.log('Attempting to login:', email, password);
+            const userCredential = await signInWithEmailAndPassword(auth, email, password);
+            console.log('Login successful:', userCredential.user);
+            return userCredential.user.uid; // Chỉ trả về UID
+        } catch (error) {
+            console.error('Login error:', error.message);
+            return rejectWithValue({ id: Date.now(), error: error.message });
+        }
+    }
+);
+
+
+// Đăng xuất
+export const logout = createAsyncThunk('auth/logout', async (_, { rejectWithValue }) => {
+    try {
+        await signOut(auth);
+    } catch (error) {
+        return rejectWithValue({ id: Date.now(), error: error.message });
+    }
+});
+
+// Lấy thông tin người dùng
+export const fetchUserProfile = createAsyncThunk(
+    'auth/fetchUserProfile',
+    async (uid, { rejectWithValue }) => {
+        try {
+            const snapshot = await get(ref(realtimeDB, `profileInfo/${uid}`));
+            if (snapshot.exists()) {
+                return snapshot.val();
+            } else {
+                throw new Error('Profile not found');
+            }
+        } catch (error) {
+            return rejectWithValue({ id: Date.now(), error: error.message });
+        }
+    }
+);
+
+// Lấy danh sách sản phẩm
+export const fetchProducts = createAsyncThunk(
+    'products/fetchProducts',
+    async (_, { rejectWithValue }) => {
+        try {
+            const snapshot = await get(ref(realtimeDB, 'products'));
+            if (snapshot.exists()) {
+                return Object.values(snapshot.val());
+            } else {
+                throw new Error('No products found');
+            }
+        } catch (error) {
+            return rejectWithValue({ id: Date.now(), error: error.message });
+        }
+    }
+);
+
+// Thêm sản phẩm vào giỏ hàng
+export const addToCart = createAsyncThunk(
+    'cart/addToCart',
+    async ({ uid, productId, size, color }, { getState, rejectWithValue }) => {
+        try {
+            const state = getState().products;
+            const product = state.products.find((p) => p.id === productId);
+
+            if (!product) {
+                throw new Error('Product not found');
+            }
+
+            // Encode color to avoid invalid characters in Firebase path
+            const encodedColor = color.replace(/#/g, '-');
+
+            const cartRef = ref(realtimeDB, `carts/${uid}/${productId}_${size}_${encodedColor}`);
+            const snapshot = await get(cartRef);
+
+            if (snapshot.exists()) {
+                await set(cartRef, {
+                    ...snapshot.val(),
+                    quantity: snapshot.val().quantity + 1,
+                });
+            } else {
+                await set(cartRef, {
+                    productId,
+                    size,
+                    color,
+                    quantity: 1,
+                    name: product.name,
+                    price: product.price,
+                    image: product.image,
+                });
+            }
+
+            return { productId, size, color };
+        } catch (error) {
+            return rejectWithValue({ id: Date.now(), error: error.message });
+        }
+    }
+);
+
+// Lấy giỏ hàng từ Firebase
+export const fetchCart = createAsyncThunk(
+    'cart/fetchCart',
+    async (uid, { rejectWithValue }) => {
+        try {
+            const cartRef = ref(realtimeDB, `carts/${uid}`);
+            const snapshot = await get(cartRef);
+
+            if (snapshot.exists()) {
+                const data = Object.values(snapshot.val()).map((item) => ({
+                    ...item,
+                    color: item.color.replace(/-/g, '#'), // Decode color
+                }));
+                return data;
+            } else {
+                return [];
+            }
+        } catch (error) {
+            return rejectWithValue({ id: Date.now(), error: error.message });
+        }
+    }
+);
+
+// Thêm/xóa sản phẩm yêu thích
+export const toggleFavorite = createAsyncThunk(
+    'products/toggleFavorite',
+    async ({ productId }, { getState, rejectWithValue }) => {
+        try {
+            const state = getState().products;
+            const product = state.products.find((p) => p.id === productId);
+
+            if (!product) {
+                throw new Error('Product not found');
+            }
+
+            const productRef = ref(realtimeDB, `products/${productId}/isFavorite`);
+            const updatedFavoriteStatus = !product.isFavorite;
+
+            // Cập nhật trạng thái isFavorite trong Firebase
+            await set(productRef, updatedFavoriteStatus);
+
+            return { productId, isFavorite: updatedFavoriteStatus };
+        } catch (error) {
+            return rejectWithValue(error.message);
+        }
+    }
+);
+
+// Xóa sản phẩm khỏi giỏ hàng
+export const removeFromCart = createAsyncThunk(
+    'cart/removeFromCart',
+    async ({ uid, productId, size, color }, { rejectWithValue }) => {
+        try {
+            const encodedColor = color.replace(/#/g, '-');
+            const cartRef = ref(realtimeDB, `carts/${uid}/${productId}_${size}_${encodedColor}`);
+            await remove(cartRef);
+            return { productId, size, color };
+        } catch (error) {
+            return rejectWithValue(error.message);
+        }
+    }
+);
+
+// Cập nhật số lượng sản phẩm trong giỏ hàng
+export const updateCartItemQuantity = createAsyncThunk(
+    'cart/updateCartItemQuantity',
+    async ({ uid, productId, size, color, increment }, { rejectWithValue }) => {
+        try {
+            const encodedColor = color.replace(/#/g, '-');
+            const cartRef = ref(realtimeDB, `carts/${uid}/${productId}_${size}_${encodedColor}`);
+            const snapshot = await get(cartRef);
+
+            if (snapshot.exists()) {
+                const currentQuantity = snapshot.val().quantity || 1;
+                const newQuantity = increment ? currentQuantity + 1 : currentQuantity - 1;
+
+                if (newQuantity < 1) {
+                    throw new Error('Quantity cannot be less than 1');
+                }
+
+                await set(cartRef, { ...snapshot.val(), quantity: newQuantity });
+                return { productId, size, color, quantity: newQuantity };
+            } else {
+                throw new Error('Cart item not found');
+            }
+        } catch (error) {
+            console.log("Update Cart Error: ", error);
+            return rejectWithValue(error.message);
+        }
+    }
+);
+
+// Initial State
 const initialState = {
-    products: Products,
-    favoriteProducts: Products.filter(product => product.isFavorite),
-    historySearch: ['adi', 'ab', 'ac', 'dsa', 'axzc', 'b', 'c'],
-    cartProducts: [],
-    deliveryInfo: [
-        {
-            id: 1,
-            name: 'Priscekila',
-            address: '3711 Spring Hill Rd undefined Tallahassee, Nevada 52874 United States',
-            number: '+99 1234567890',
-        },
-    ],
-    selectedAddressId: null,
-    account: [
-        {
-            id: 1,
-            name: 'minhduc',
-            email: 'minhduc@gmail.com',
-            password: '123456',
-        },
-        {
-            id: 2,
-            name: 'khanhquang',
-            email: 'khanhquang@gmail.com',
-            password: '123456',
-        }
-    ],
-    profile: [
-        {
-            id: 1,
-            name: 'minhduc',
-            gender: 'Male',
-            phoneNumber: '0123456789',
-            birthdate: '2003-10-14',
-            account_id: 1
-        },
-        {
-            id: 2,
-            name: 'khanhquang',
-            gender: 'Male',
-            phoneNumber: '0123456789',
-            birthdate: '2003-12-22',
-            account_id: 2
-        }
-    ],
+    products: [],
+    profile: null,
     accountLoggedIn: null,
-    loginError: null,
+    cartProducts: [],
+    loginErrors: [],
+    registerErrors: [],
+    fetchProfileErrors: [],
+    fetchProductsErrors: [],
     loginSuccess: false,
+    registerSuccess: false,
 };
 
+// Slice
 const productsSlice = createSlice({
     name: 'products',
     initialState,
     reducers: {
-        setProducts: (state, action) => {
-            state.products = action.payload;
+        resetLoginError: (state) => {
+            state.loginErrors = [];
         },
-        toggleFavorite: (state, action) => {
-            const productId = action.payload;
-            const productIndex = state.products.findIndex((p) => p.id === productId);
-
-            if (productIndex >= 0) {
-                const updatedProduct = {
-                    ...state.products[productIndex],
-                    isFavorite: !state.products[productIndex].isFavorite,
-                };
-
-                state.products[productIndex] = updatedProduct;
-
-                if (updatedProduct.isFavorite) {
-                    state.favoriteProducts.push(updatedProduct);
-                } else {
-                    state.favoriteProducts = state.favoriteProducts.filter((p) => p.id !== productId);
-                }
-            }
+        resetRegisterError: (state) => {
+            state.registerErrors = [];
         },
-        addHistorySearch: (state, action) => {
-            if (!state.historySearch.includes(action.payload)) {
-                state.historySearch.unshift(action.payload);
-            }
+        resetFetchProfileError: (state) => {
+            state.fetchProfileErrors = [];
         },
-        removeHistorySearch: (state, action) => {
-            state.historySearch = state.historySearch.filter((item) => item !== action.payload);
+        resetFetchProductsError: (state) => {
+            state.fetchProductsErrors = [];
         },
-        setSearchTerm: (state, action) => {
-            state.searchTerm = action.payload;
-        },
-        addToCart: (state, action) => {
-            const { productId, size, color } = action.payload;
-            const existingProduct = state.cartProducts.find(
-                (item) => item.productId === productId && item.size === size && item.color === color
-            );
-
-            if (existingProduct) {
-                existingProduct.quantity += 1;
-            } else {
+    },
+    extraReducers: (builder) => {
+        builder
+            .addCase(register.fulfilled, (state) => {
+                state.registerSuccess = true;
+                state.registerErrors = [];
+            })
+            .addCase(register.rejected, (state, action) => {
+                state.registerSuccess = false;
+                state.registerErrors.push(action.payload);
+            })
+            .addCase(login.fulfilled, (state, action) => {
+                state.loginSuccess = true;
+                state.accountLoggedIn = action.payload;
+                state.loginErrors = [];
+            })
+            .addCase(login.rejected, (state, action) => {
+                state.loginSuccess = false;
+                state.loginErrors.push(action.payload);
+            })
+            .addCase(logout.fulfilled, (state) => {
+                state.accountLoggedIn = null;
+                state.loginSuccess = false;
+            })
+            .addCase(fetchUserProfile.fulfilled, (state, action) => {
+                state.profile = action.payload;
+                state.fetchProfileErrors = [];
+            })
+            .addCase(fetchUserProfile.rejected, (state, action) => {
+                state.fetchProfileErrors.push(action.payload);
+            })
+            .addCase(fetchProducts.fulfilled, (state, action) => {
+                state.products = action.payload || [];
+                state.fetchProductsErrors = [];
+            })
+            .addCase(fetchProducts.rejected, (state, action) => {
+                state.fetchProductsErrors.push(action.payload);
+            })
+            .addCase(toggleFavorite.fulfilled, (state, action) => {
+                const { productId, isFavorite } = action.payload;
                 const product = state.products.find((p) => p.id === productId);
                 if (product) {
-                    state.cartProducts.push({
-                        productId,
-                        size,
-                        color,
-                        quantity: 1,
-                        name: product.name,
-                        price: product.price,
-                        image: product.image
-                    });
+                    product.isFavorite = isFavorite;
                 }
-            }
-        },
-        removeFromCart: (state, action) => {
-            const { productId, size, color } = action.payload;
-            state.cartProducts = state.cartProducts.filter(
-                (item) => !(item.productId === productId && item.size === size && item.color === color)
-            );
-        },
-        increaseQuantity: (state, action) => {
-            const { productId, size, color } = action.payload;
-            const product = state.cartProducts.find(
-                (item) => item.productId === productId && item.size === size && item.color === color
-            );
-            if (product) product.quantity += 1;
-        },
-        decreaseQuantity: (state, action) => {
-            const { productId, size, color } = action.payload;
-            const product = state.cartProducts.find(
-                (item) => item.productId === productId && item.size === size && item.color === color
-            );
-            if (product && product.quantity > 1) product.quantity -= 1;
-        },
-        updateCartItemQuantity: (state, action) => {
-            const { productId, size, color, increment } = action.payload;
-            const cartItem = state.cartProducts.find(
-                (item) => item.productId === productId && item.size === size && item.color === color
-            );
+            })
+            .addCase(toggleFavorite.rejected, (state, action) => {
+                console.error('Toggle Favorite Failed:', action.payload);
+            })
+            .addCase(addToCart.fulfilled, (state, action) => {
+                const { productId, size, color } = action.payload;
+                const existingProduct = state.cartProducts.find(
+                    (item) => item.productId === productId && item.size === size && item.color === color
+                );
 
-            if (cartItem) {
-                if (increment) {
-                    cartItem.quantity += 1;
-                } else if (cartItem.quantity > 1) {
-                    cartItem.quantity -= 1;
+                if (existingProduct) {
+                    existingProduct.quantity += 1;
+                } else {
+                    const product = state.products.find((p) => p.id === productId);
+                    if (product) {
+                        state.cartProducts.push({
+                            productId,
+                            size,
+                            color,
+                            quantity: 1,
+                            name: product.name,
+                            price: product.price,
+                            image: product.image,
+                        });
+                    }
                 }
-            }
-        },
-        addDeliveryAddress: (state, action) => {
-            const newAddress = { ...action.payload, id: Date.now() };
-            state.deliveryInfo.push(newAddress);
-        },
-        editDeliveryAddress: (state, action) => {
-            const { id, updatedAddress } = action.payload;
-            const index = state.deliveryInfo.findIndex((address) => address.id === id);
-            if (index >= 0) {
-                state.deliveryInfo[index] = { ...state.deliveryInfo[index], ...updatedAddress };
-            }
-        },
-        deleteDeliveryAddress: (state, action) => {
-            state.deliveryInfo = state.deliveryInfo.filter((address) => address.id !== action.payload);
-        },
-        selectDeliveryAddress: (state, action) => {
-            state.selectedAddressId = action.payload;
-        },
-        addAccount: (state, action) => {
-            const {id, name, email, password }= action.payload;
-            const existingAccount = state.account.find((acc) => acc.email === action.payload.email);
-            if (existingAccount) {
-                throw new Error('Email already exists!');
-            } else {
-                const newAccount = { id, name, email, password };
-                state.account.push(newAccount);
-            }
-        },
-        deleteAccount: (state, action) => {
-            state.account = state.account.filter((account) => account.id !== action.payload);
-        },
-        login: (state, action) => {
-            const { email, password } = action.payload;
-            const account = state.account.filter((acc) => acc.email === email && acc.password === password);
-            const size = account.length;
-            if (size > 0) {
-                state.loginSuccess = true;
-                state.loginError = null;
-                state.accountLoggedIn = account[0];
-            } else {
-                state.loginSuccess = false;
-                state.loginError = 'Invalid email or password';
-            }
-        },
-        updateAccount: (state, action) => {
-            const { id, updatedData } = action.payload;
-            const accountIndex = state.account.findIndex((acc) => acc.id === id);
-            if (accountIndex !== -1) {
-                state.account[accountIndex] = { ...state.account[accountIndex], ...updatedData };
-            }
-        },
-        logout: (state) => {
-            state.loginSuccess = false;
-        },
-        addUserProfile: (state, action) => {
-            const { id, name, phoneNumber, gender = 'Male', birthdate = '2003-01-01', account_id } = action.payload;
-            state.profile.push({
-                id,
-                name,
-                phoneNumber,
-                gender,
-                birthdate,
-                account_id,
-            });
-        },
-        updateUserProfile: (state, action) => {
-            const { id, updatedData } = action.payload;
-            const index = state.profile.findIndex((p) => p.id === id);
-            if (index >= 0) {
-                state.profile[index] = { ...state.profile[index], ...updatedData };
-            }
-        },
-        deleteUserProfile: (state, action) => {
-            state.profile = state.profile.filter((p) => p.id !== action.payload);
-        },
+            })
+            .addCase(addToCart.rejected, (state, action) => {
+                console.error('Add to Cart Failed:', action.payload);
+            })
+            .addCase(updateCartItemQuantity.fulfilled, (state, action) => {
+                console.log("Updated quantity:", action.payload);
+                const { productId, size, color, quantity } = action.payload;
+                const item = state.cartProducts.find(
+                    (p) => p.productId === productId && p.size === size && p.color === color
+                );
+                if (item) {
+                    item.quantity = quantity;
+                }
+            })
+            .addCase(removeFromCart.fulfilled, (state, action) => {
+                const { productId, size, color } = action.payload;
+                state.cartProducts = state.cartProducts.filter(
+                    (item) => !(item.productId === productId && item.size === size && item.color === color)
+                );
+            })
+            .addCase(removeFromCart.rejected, (state, action) => {
+                console.error('Remove from Cart Failed:', action.payload);
+            })
+            ;
     },
 });
 
+// Export Actions
 export const {
-    setProducts,
-    toggleFavorite,
-    addHistorySearch,
-    removeHistorySearch,
-    setSearchTerm,
-    addToCart,
-    removeFromCart,
-    increaseQuantity,
-    decreaseQuantity,
-    updateCartItemQuantity,
-    addDeliveryAddress,
-    editDeliveryAddress,
-    deleteDeliveryAddress,
-    selectDeliveryAddress,
-    addAccount,
-    updateAccount,
-    deleteAccount,
-    login,
-    logout,
-    addUserProfile,
-    updateUserProfile,
-    deleteUserProfile
+    resetLoginError,
+    resetRegisterError,
+    resetFetchProfileError,
+    resetFetchProductsError,
 } = productsSlice.actions;
 
+// Export Reducer
 export default productsSlice.reducer;

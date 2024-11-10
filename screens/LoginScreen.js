@@ -1,66 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, Image, StyleSheet, TouchableOpacity, TextInput, Alert,SafeAreaView } from 'react-native';
+import { View, Text, Image, StyleSheet, TouchableOpacity, TextInput, Alert, SafeAreaView } from 'react-native';
 import { useSelector, useDispatch } from 'react-redux';
-import { login } from '../reduxToolkit/productsSlice';
+import { login, resetLoginError } from '../reduxToolkit/productsSlice';
 import { useNavigation } from '@react-navigation/native';
 
-const WelcomeText = () => {
-  return (
-    <SafeAreaView style={styles.welcomeContainer}>
-      <Text style={styles.welcomeTitle}>Welcome to Shop</Text>
-      <Text style={styles.welcomeSubtitle}>Sign in to continue</Text>
-    </SafeAreaView>
-  );
-};
-
-const GoogleLoginButton = () => {
-  return (
-    <TouchableOpacity style={styles.socialButton}>
-      <Image
-        source={require('../assets/Login/google.png')}
-        style={styles.socialLogo}
-      />
-      <Text style={styles.socialText}>Login with Google</Text>
-    </TouchableOpacity>
-  );
-};
-
-const FacebookLoginButton = () => {
-  return (
-    <TouchableOpacity style={styles.socialButton}>
-      <Image
-        source={require('../assets/Login/Facebook.png')}
-        style={styles.socialLogo}
-      />
-      <Text style={styles.socialText}>Login with Facebook</Text>
-    </TouchableOpacity>
-  );
-};
-
-const OrLine = () => {
-  return (
-    <View style={styles.orContainer}>
-      <View style={styles.line} />
-      <Text style={styles.orText}>OR</Text>
-      <View style={styles.line} />
-    </View>
-  );
-};
-
-const RegisterLink = ({ navigation }) => {
-  const handlePress = () => {
-    navigation.navigate('RegisterScreen');
-  };
-
-  return (
-    <View style={styles.registerContainer}>
-      <Text style={styles.registerText}>Don’t have an account? </Text>
-      <TouchableOpacity onPress={handlePress}>
-        <Text style={styles.registerLink}>Register</Text>
-      </TouchableOpacity>
-    </View>
-  );
-};
 const LoginScreen = () => {
   const navigation = useNavigation();
   const dispatch = useDispatch();
@@ -68,16 +11,22 @@ const LoginScreen = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [errors, setErrors] = useState({});
-  const loginError = useSelector((state) => state.products.loginError);
+
+  const loginErrors = useSelector((state) => state.products.loginErrors);
   const loginSuccess = useSelector((state) => state.products.loginSuccess);
 
   useEffect(() => {
     if (loginSuccess) {
       navigation.navigate('HomeScreen');
-    } else if (loginError) {
-      Alert.alert('Login Error', loginError);
     }
-  }, [loginSuccess, loginError, navigation]);
+  }, [loginSuccess, navigation]);
+
+  useEffect(() => {
+    if (loginErrors.length > 0) {
+      const latestError = loginErrors[loginErrors.length - 1];
+      Alert.alert('Login Error', latestError.error);
+    }
+  }, [loginErrors]);
 
   const validateForm = () => {
     let isValid = true;
@@ -106,10 +55,18 @@ const LoginScreen = () => {
     }
   };
 
+  // Reset login error when email or password changes
+  useEffect(() => {
+    if (loginErrors.length > 0) {
+      dispatch(resetLoginError());
+    }
+  }, [email, password, dispatch]);
+
   return (
     <View style={styles.screen}>
       <Image source={require('../assets/Login/logo.png')} style={styles.logo} />
-      <WelcomeText />
+      <Text style={styles.welcomeTitle}>Welcome to Shop</Text>
+      <Text style={styles.welcomeSubtitle}>Sign in to continue</Text>
 
       <View style={styles.inputContainer}>
         <TextInput
@@ -134,14 +91,39 @@ const LoginScreen = () => {
         />
       </View>
       {errors.password && <Text style={styles.errorText}>{errors.password}</Text>}
-            <TouchableOpacity style={styles.loginButton} onPress={handleSignIn}>
+
+      <TouchableOpacity style={styles.loginButton} onPress={handleSignIn}>
         <Text style={styles.buttonText}>Sign In</Text>
       </TouchableOpacity>
-<OrLine />
-      <GoogleLoginButton />
-      <FacebookLoginButton />
-            <RegisterLink navigation={navigation} />
 
+      <View style={styles.orContainer}>
+        <View style={styles.line} />
+        <Text style={styles.orText}>OR</Text>
+        <View style={styles.line} />
+      </View>
+
+      <TouchableOpacity style={styles.socialButton}>
+        <Image
+          source={require('../assets/Login/google.png')}
+          style={styles.socialLogo}
+        />
+        <Text style={styles.socialText}>Login with Google</Text>
+      </TouchableOpacity>
+
+      <TouchableOpacity style={styles.socialButton}>
+        <Image
+          source={require('../assets/Login/Facebook.png')}
+          style={styles.socialLogo}
+        />
+        <Text style={styles.socialText}>Login with Facebook</Text>
+      </TouchableOpacity>
+
+      <View style={styles.registerContainer}>
+        <Text style={styles.registerText}>Don’t have an account? </Text>
+        <TouchableOpacity onPress={() => navigation.navigate('RegisterScreen')}>
+          <Text style={styles.registerLink}>Register</Text>
+        </TouchableOpacity>
+      </View>
     </View>
   );
 };
@@ -188,16 +170,10 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
   },
-  welcomeContainer: {
-    alignItems: 'center',
-    marginBottom: 20,
-  },
   welcomeTitle: {
     fontSize: 16,
     color: '#223263',
     fontWeight: '700',
-    fontFamily: 'Poppins',
-    letterSpacing: 0.5,
     textAlign: 'center',
   },
   welcomeSubtitle: {
@@ -226,7 +202,6 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#9098B1',
     fontWeight: '700',
-    letterSpacing: 0.5,
   },
   orContainer: {
     flexDirection: 'row',
@@ -245,7 +220,7 @@ const styles = StyleSheet.create({
     color: '#9098b1',
     marginHorizontal: 8,
   },
-registerContainer: {
+  registerContainer: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
