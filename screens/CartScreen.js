@@ -1,23 +1,42 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Text, SafeAreaView, StyleSheet, Image, View, TouchableOpacity, FlatList, TextInput, Alert } from 'react-native';
 import { useSelector, useDispatch } from 'react-redux';
-import { toggleFavorite, removeFromCart, updateCartItemQuantity } from '../reduxToolkit/productsSlice';
+import { toggleFavorite, removeFromCart, updateCartItemQuantity, fetchCart } from '../reduxToolkit/productsSlice';
 import favorite from '../assets/Cart/Favorite.png';
 import trash from '../assets/Cart/Trash.png';
 import { useNavigation } from '@react-navigation/native';
+
 const coupons = [
   { code: 'DISCOUNT10', discount: 0.10 },
   { code: 'SAVE50', discount: 50 },
   { code: 'FREESHIP', discount: 'shipping' },
 ];
-const CartScreen = ({ route }) => {
+
+const CartScreen = () => {
   const navigation = useNavigation();
   const dispatch = useDispatch();
   const cartProducts = useSelector((state) => state.products.cartProducts);
+  const accountLoggedIn = useSelector((state) => state.products.accountLoggedIn);
+
   const [freeShipping, setFreeShipping] = useState(false);
   const [appliedDiscount, setAppliedDiscount] = useState(0);
   const [couponCode, setCouponCode] = useState('');
   const [shippingFee, setShippingFee] = useState(40.00);
+
+  useEffect(() => {
+    if (accountLoggedIn) {
+      dispatch(fetchCart(accountLoggedIn)); // Fetch cart on load
+    }
+  }, [dispatch, accountLoggedIn]);
+
+  useEffect(() => {
+    // Nếu giỏ hàng trống, đặt phí vận chuyển bằng 0
+    if (cartProducts.length === 0) {
+      setShippingFee(0);
+    } else {
+      setShippingFee(40.00); // Giá trị mặc định của phí vận chuyển
+    }
+  }, [cartProducts]);
 
   const handleApplyCoupon = (couponCode) => {
     const coupon = coupons.find((c) => c.code === couponCode);
@@ -43,50 +62,63 @@ const CartScreen = ({ route }) => {
       setShippingFee(40.00);
     }
   };
+
   const getTotalPrice = () => {
     const totalItemPrice = getTotalItemPrice();
-    const shipping = freeShipping ? 0 : shippingFee;
+    const shipping = freeShipping || cartProducts.length === 0 ? 0 : shippingFee;
     const discountedTotal = totalItemPrice - appliedDiscount;
     return (discountedTotal + shipping).toFixed(2);
   };
+
   const getTotalItemPrice = () => {
     return cartProducts.reduce((total, item) => total + item.price * item.quantity, 0);
   };
+
   const handleToggleFavorite = (productId) => {
-    dispatch(toggleFavorite(productId));
+    if (!accountLoggedIn) {
+      Alert.alert('Error', 'Please log in to toggle favorite status.');
+      return;
+    }
+    dispatch(toggleFavorite({ productId, uid: accountLoggedIn }));
   };
+
   const getTotalItemCount = () => {
     return cartProducts.reduce((total, item) => total + item.quantity, 0);
   };
 
   const handleCheckout = () => {
+    if (cartProducts.length === 0) {
+      Alert.alert('Empty Cart', 'Your cart is empty.');
+      return;
+    }
     navigation.navigate('ShipToScreen', {
       totalItems: getTotalItemCount(),
       totalPrice: getTotalPrice(),
     });
-  }
-
+  };
 
   const increaseCount = (productId, size, color) => {
-    dispatch(updateCartItemQuantity({ productId, size, color, increment: true }));
+    dispatch(updateCartItemQuantity({ uid: accountLoggedIn, productId, size, color, increment: true }));
   };
 
   const decreaseCount = (productId, size, color) => {
     const product = cartProducts.find((item) => item.productId === productId && item.size === size && item.color === color);
     if (product.quantity > 1) {
-      dispatch(updateCartItemQuantity({ productId, size, color, increment: false }));
+      dispatch(updateCartItemQuantity({ uid: accountLoggedIn, productId, size, color, increment: false }));
     } else {
       Alert.alert('Invalid Quantity', 'Minimum quantity is 1.');
     }
   };
 
   const handleRemoveProduct = (productId, size, color) => {
-    dispatch(removeFromCart({ productId, size, color }));
+    dispatch(removeFromCart({ uid: accountLoggedIn, productId, size, color }));
+    dispatch(fetchCart(accountLoggedIn));
   };
+
   const renderCartItem = ({ item }) => (
     <View style={styles.item}>
       <View style={styles.imageContainer}>
-        <Image source={item.image} style={styles.image} />
+        <Image source={{ uri: item.image }} style={styles.image} />
       </View>
       <View style={styles.info}>
         <View style={styles.detailsContainer}>
@@ -114,10 +146,8 @@ const CartScreen = ({ route }) => {
           />
         </View>
       </View>
-
     </View>
   );
-
 
   return (
     <SafeAreaView style={styles.container}>
@@ -138,7 +168,7 @@ const CartScreen = ({ route }) => {
           value={couponCode}
           onChangeText={setCouponCode}
         />
-        <TouchableOpacity style={styles.applyBtn} onPress={() => { handleApplyCoupon(couponCode) }}>
+        <TouchableOpacity style={styles.applyBtn} onPress={() => handleApplyCoupon(couponCode)}>
           <Text style={{ color: 'white', fontWeight: 'bold' }}>Apply</Text>
         </TouchableOpacity>
       </View>
@@ -157,8 +187,10 @@ const CartScreen = ({ route }) => {
           <Text>${getTotalPrice()}</Text>
         </View>
       </View>
-      <TouchableOpacity style={styles.checkout}
+      <TouchableOpacity
+        style={[styles.checkout, { opacity: cartProducts.length === 0 ? 0.5 : 1 }]}
         onPress={handleCheckout}
+        disabled={cartProducts.length === 0}
       >
         <Text style={{ color: 'white', fontSize: 18 }}>Check Out</Text>
       </TouchableOpacity>
@@ -179,6 +211,7 @@ const Counter = ({ count, increaseCount, decreaseCount }) => (
     </TouchableOpacity>
   </View>
 );
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,

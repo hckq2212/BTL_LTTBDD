@@ -6,28 +6,34 @@ import { useNavigation } from '@react-navigation/native';
 import Icon from 'react-native-vector-icons/FontAwesome';
 
 const ProductDetailScreen = ({ route }) => {
-  const { productId } = route.params;
+  const userId = useSelector((state) => state.products.accountLoggedIn);
+  const { productId: initialProductId } = route.params;
+  const [productId, setProductId] = useState(initialProductId);
   const dispatch = useDispatch();
   const navigation = useNavigation();
 
   const product = useSelector((state) => state.products.products.find((p) => p.id === productId));
 
-  // Kiểm tra nếu product không tồn tại
   useEffect(() => {
     if (!product) {
       Alert.alert('Error', 'Product not found');
       navigation.goBack();
+    } else {
+      setSelectedImage(product.image);
+      setSelectedColor(product.colors[0]);
     }
-  }, [product]);
+  }, [product, productId]);
 
-  const similarProducts = useSelector((state) => state.products.products.filter((p) => p.category === product?.category && p.id !== productId));
+  const similarProducts = useSelector((state) =>
+    state.products.products.filter((p) => p.category === product?.category && p.id !== productId)
+  );
 
   const [selectedImage, setSelectedImage] = useState(product?.image);
   const [selectedSize, setSelectedSize] = useState(null);
   const [selectedColor, setSelectedColor] = useState(product?.colors[0]);
 
   const handleToggleFavorite = () => {
-    dispatch(toggleFavorite(productId));
+    dispatch(toggleFavorite({ productId }));
   };
 
   const handleColorChange = (colorImage) => {
@@ -52,17 +58,17 @@ const ProductDetailScreen = ({ route }) => {
       Alert.alert('Select Color', 'Please select a color before adding to cart.');
       return;
     }
-
-    dispatch(addToCart({ productId, size: selectedSize, color: selectedColor.name }));
+    console.log('Adding to cart before:', userId, productId, selectedSize, selectedColor.name);
+    dispatch(addToCart({ uid: userId, productId, size: selectedSize, color: selectedColor.name }));
     Alert.alert('Added to Cart', `${product.name} (Size: ${selectedSize}, Color: ${selectedColor.name}) has been added to your cart.`);
   };
 
   const renderSimilarProduct = ({ item }) => (
     <TouchableOpacity
-      onPress={() => navigation.navigate('ProductDetailScreen', { productId: item.id })}
+      onPress={() => setProductId(item.id)}
       style={styles.similarProduct}
     >
-      <Image source={item.image} style={styles.similarImage} />
+      <Image source={{ uri: item.image }} style={styles.similarImage} />
       <Text style={styles.similarName} numberOfLines={1}>{item.name}</Text>
       <Text style={styles.similarPrice}>${item.price.toFixed(2)}</Text>
     </TouchableOpacity>
@@ -73,7 +79,7 @@ const ProductDetailScreen = ({ route }) => {
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView>
-        <Image source={selectedImage} style={styles.productImage} />
+        <Image source={{ uri: selectedImage }} style={styles.productImage} />
         <View style={styles.detailsContainer}>
           <View style={styles.headerRow}>
             <Text style={styles.productName}>{product.name}</Text>
@@ -143,7 +149,6 @@ const ProductDetailScreen = ({ route }) => {
     </SafeAreaView>
   );
 };
-
 
 const styles = StyleSheet.create({
   container: {

@@ -47,7 +47,7 @@ const SearchResultScreen = ({ route, navigation }) => {
   const renderResult = ({ item }) => (
     <TouchableOpacity style={styles.item} onPress={() => handlePress(item.id)}>
       <View style={styles.imageContainer}>
-        <Image source={item.image} style={styles.productImage} />
+        <Image source={{ uri: item.image }} style={styles.productImage} />
       </View>
       <Text style={styles.productName}>{item.name}</Text>
       <View style={styles.rating}>

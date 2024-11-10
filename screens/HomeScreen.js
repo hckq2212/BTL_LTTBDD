@@ -1,19 +1,28 @@
-import React from 'react';
-import { View, StyleSheet, SafeAreaView, Image, FlatList } from 'react-native';
-import { useSelector } from 'react-redux';
+import React, { useEffect } from 'react';
+import { View, StyleSheet, SafeAreaView, Image, FlatList, Text } from 'react-native';
+import { useSelector, useDispatch } from 'react-redux';
 import SearchBar from '../components/SearchBar';
 import CategoryList from '../components/CategoryList';
 import ProductCarousel from '../components/ProductCarousel';
-import FooterNav from '../components/FooterNav';
 import ProductCard from '../components/ProductCard';
+import { fetchProducts, fetchUserProfile } from '../reduxToolkit/productsSlice';
 
 const HomeScreen = () => {
+  const dispatch = useDispatch();
   const products = useSelector((state) => state.products.products);
-  console.log('Profiles:', useSelector((state) => state.products.profile));
+  const profile = useSelector((state) => state.products.profile);
+  const userId = useSelector((state) => state.products.accountLoggedIn?.uid);
 
-  const flashSaleProducts = products.filter(product => product.isFlashSale);
-  const megaSaleProducts = products.filter(product => product.isMegaSale);
-  const recommendedProducts = products.slice(0, 10);
+  useEffect(() => {
+    dispatch(fetchProducts());
+    if (userId) {
+      dispatch(fetchUserProfile(userId));
+    }
+  }, [dispatch, userId]);
+
+  const flashSaleProducts = products?.filter((product) => product.isFlashSale) || [];
+  const megaSaleProducts = products?.filter((product) => product.isMegaSale) || [];
+  const recommendedProducts = products?.slice(0, 10) || [];
 
   const renderHeader = () => (
     <>
@@ -29,7 +38,6 @@ const HomeScreen = () => {
   return (
     <SafeAreaView style={styles.container}>
       <FlatList
-        style={styles.flatList}
         data={recommendedProducts}
         renderItem={({ item }) => (
           <ProductCard
@@ -56,10 +64,6 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#fff',
-  },
-  flatList: {
-    paddingHorizontal: 16,
-    flex: 1,
   },
   banner: {
     width: '100%',

@@ -16,7 +16,7 @@ const FavoriteProductScreen = () => {
 
   const renderFavProduct = ({ item }) => (
     <View style={styles.item}>
-      <Image source={item.image} style={styles.image} />
+      <Image source={{ uri: item.image }} style={styles.image} />
       <View style={styles.productInfo}>
         <Text style={styles.productName}>{item.name}</Text>
         <View style={styles.rating}>
