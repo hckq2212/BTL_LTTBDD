@@ -16,6 +16,7 @@ const CartScreen = () => {
   const navigation = useNavigation();
   const dispatch = useDispatch();
   const cartProducts = useSelector((state) => state.products.cartProducts);
+  console.log(cartProducts);
   const accountLoggedIn = useSelector((state) => state.products.accountLoggedIn);
 
   const [freeShipping, setFreeShipping] = useState(false);

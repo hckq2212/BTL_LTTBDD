@@ -2,7 +2,7 @@ import React from 'react';
 import { View, StyleSheet, Text, TouchableOpacity, Image } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { IconButton, Divider } from 'react-native-paper';
-
+import SuccessIcon from '../components/SuccessIcon';
 const SuccessScreen = () => {
   const navigation = useNavigation();
   const route = useRoute();
@@ -21,6 +21,7 @@ const SuccessScreen = () => {
 
   return (
     <View style={styles.container}>
+      <SuccessIcon />
       <View style={styles.summaryContainer}>
         <View style={styles.row}>
           <Text style={styles.label}>Subtotal</Text>
@@ -29,13 +30,6 @@ const SuccessScreen = () => {
         <View style={styles.row}>
           <Text style={styles.label}>Tax (10%)</Text>
           <Text style={styles.value}>${parseFloat(tax).toFixed(2)}</Text>
-        </View>
-
-        <Divider style={styles.divider} />
-
-        <View style={styles.row}>
-          <Text style={styles.label}>Total Items</Text>
-          <Text style={styles.value}>{totalItems}</Text>
         </View>
 
         <Divider style={styles.divider} />

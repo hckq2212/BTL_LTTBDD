@@ -1,36 +1,37 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, TextInput, TouchableOpacity, Alert } from 'react-native';
 import { useDispatch, useSelector } from 'react-redux';
-import { updateAccount } from '../reduxToolkit/productsSlice'; 
+import { updateProfileInfo } from '../reduxToolkit/productsSlice';
 
 const EditEmailScreen = ({ navigation }) => {
   const dispatch = useDispatch();
-  const profiles = useSelector((state) => state.products.profile);
+  const profile = useSelector((state) => state.products.profile);
   const accountLoggedIn = useSelector((state) => state.products.accountLoggedIn);
 
-  const userProfile = profiles.find(profile => profile.account_id === (accountLoggedIn ? accountLoggedIn.id : null));
-  const [email, setEmail] = useState(accountLoggedIn?.email); 
+  const [email, setEmail] = useState(profile?.email || '');
 
   const handleSave = () => {
     if (!email) {
-      Alert.alert("Validation Error", "Email cannot be empty");
+      Alert.alert('Validation Error', 'Email cannot be empty');
       return;
     }
 
     const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
-
     if (!emailRegex.test(email)) {
-      Alert.alert("Validation Error", "Invalid email format. Please enter a valid email address.");
+      Alert.alert('Validation Error', 'Invalid email format. Please enter a valid email address.');
       return;
     }
 
-    dispatch(updateAccount({ id: userProfile.id, updatedData: { email } }));
-
-    if (accountLoggedIn && accountLoggedIn.id === userProfile.id) {
-      dispatch(updateAccount({ id: accountLoggedIn.id, updatedData: { email } }));
-    }
-
-    navigation.navigate('ProfileScreen', { updatedValue: email, field: 'Email' });
+    dispatch(updateProfileInfo({ uid: accountLoggedIn, updatedData: { email } }))
+      .unwrap()
+      .then(() => {
+        Alert.alert('Success', 'Email updated successfully');
+        navigation.navigate('ProfileScreen', { updatedValue: email, field: 'Email' });
+      })
+      .catch((error) => {
+        Alert.alert('Error', 'Failed to update email');
+        console.error('Error updating email:', error);
+      });
   };
 
   return (
@@ -42,6 +43,7 @@ const EditEmailScreen = ({ navigation }) => {
         onChangeText={setEmail}
         keyboardType="email-address"
         placeholder="Enter your new email"
+        autoCapitalize="none"
       />
       <TouchableOpacity style={styles.saveButton} onPress={handleSave}>
         <Text style={styles.saveButtonText}>Save</Text>

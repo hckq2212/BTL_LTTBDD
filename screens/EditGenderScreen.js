@@ -1,19 +1,32 @@
-import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import React, { useState } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity, Alert } from 'react-native';
 import { RadioButton } from 'react-native-paper';
 import { useDispatch, useSelector } from 'react-redux';
-import { updateUserProfile } from '../reduxToolkit/productsSlice';
+import { updateProfileInfo } from '../reduxToolkit/productsSlice'; // Assume correct function
+
 const EditGenderScreen = ({ navigation }) => {
   const dispatch = useDispatch();
-  const profiles = useSelector((state) => state.products.profile);
+  const profile = useSelector((state) => state.products.profile); // Directly access if profile is an object
   const accountLoggedIn = useSelector((state) => state.products.accountLoggedIn);
 
-  const userProfile = profiles.find(profile => profile.account_id === (accountLoggedIn ? accountLoggedIn.id : null));
-  const [gender, setGender] = useState(userProfile?.gender || 'Not specified');
+  const [gender, setGender] = useState(profile?.gender || 'Not specified');
 
   const handleSave = () => {
-    dispatch(updateUserProfile({ id: userProfile.id, updatedData: { gender } }));
-    navigation.navigate('ProfileScreen', { updatedValue: gender, field: 'Gender' });
+    if (!gender) {
+      Alert.alert('Validation Error', 'Please select a gender');
+      return;
+    }
+
+    dispatch(updateProfileInfo({ uid: accountLoggedIn, updatedData: { gender } }))
+      .unwrap()
+      .then(() => {
+        Alert.alert('Success', 'Gender updated successfully');
+        navigation.navigate('ProfileScreen', { updatedValue: gender, field: 'Gender' });
+      })
+      .catch((error) => {
+        Alert.alert('Error', 'Failed to update gender');
+        console.error('Error updating gender:', error);
+      });
   };
 
   return (

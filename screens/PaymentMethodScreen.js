@@ -2,35 +2,31 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { SafeAreaView, View, StyleSheet, Image, TouchableOpacity, ScrollView, Text } from 'react-native';
 import { RadioButton, Divider, IconButton } from 'react-native-paper';
 import { useNavigation } from '@react-navigation/native';
-import axios from 'axios';
+import { useSelector, useDispatch } from 'react-redux';
+import { fetchPaymentMethods } from '../reduxToolkit/productsSlice';
 
 const PaymentMethodsScreen = ({ route }) => {
   const { totalItems, totalPrice, selectedAddress } = route.params;
-  const [paymentMethods, setPaymentMethods] = useState([]);
-  const [selectedAccount, setSelectedAccount] = useState(null);
-  const [expandedMethod, setExpandedMethod] = useState(null);
+  const dispatch = useDispatch();
   const navigation = useNavigation();
 
+  const paymentMethods = useSelector((state) => state.products.paymentMethods);
+  console.log(paymentMethods);
+  const [selectedAccount, setSelectedAccount] = useState(null);
+  const [expandedMethod, setExpandedMethod] = useState(null);
 
   const subtotal = parseFloat(totalPrice).toFixed(2);
   const tax = parseFloat((subtotal * 0.1)).toFixed(2);
   const totalAmount = (parseFloat(subtotal) + parseFloat(tax)).toFixed(2);
 
   useEffect(() => {
-    const fetchPaymentMethods = async () => {
-      try {
-        const response = await axios.get('https://67231a7a2108960b9cc6ac7c.mockapi.io/paymentMethods');
-        setPaymentMethods(response.data);
-      } catch (error) {
-        console.error("Lỗi khi gọi API: ", error);
-      }
-    };
+    const unsubscribe = navigation.addListener('focus', () => {
+      dispatch(fetchPaymentMethods());
 
-    const unsubscribe = navigation.addListener('focus', fetchPaymentMethods);
+    });
 
     return unsubscribe;
-  }, [navigation]);
-
+  }, [navigation, dispatch]);
 
   const handleSelectAccount = (method, account) => {
     setSelectedAccount({
@@ -100,7 +96,6 @@ const PaymentMethodsScreen = ({ route }) => {
             <Text style={styles.taxLabel}>Tax</Text>
             <Text style={styles.taxAmount}>${tax}</Text>
           </View>
-
         </View>
 
         <Text style={styles.header}>Chọn phương thức thanh toán</Text>

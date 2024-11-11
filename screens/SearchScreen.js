@@ -3,7 +3,8 @@ import { View, Text, TextInput, TouchableOpacity, ActivityIndicator, StyleSheet 
 import Icon from 'react-native-vector-icons/FontAwesome';
 import { useSelector, useDispatch } from 'react-redux';
 import { useNavigation } from '@react-navigation/native';
-import { addHistorySearch, removeHistorySearch } from '../reduxToolkit/productsSlice';
+import { addHistorySearch, fetchHistorySearch, removeHistorySearch } from '../reduxToolkit/productsSlice';
+
 const SearchScreen = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [suggestions, setSuggestions] = useState([]);
@@ -13,29 +14,43 @@ const SearchScreen = () => {
 
   const dispatch = useDispatch();
   const navigation = useNavigation();
+  const accountLoggedIn = useSelector((state) => state.products.accountLoggedIn);
   const products = useSelector((state) => state.products.products);
   const historySearch = useSelector((state) => state.products.historySearch);
+
+  // Fetch search history on component mount
+  React.useEffect(() => {
+    dispatch(fetchHistorySearch(accountLoggedIn))
+      .unwrap()
+      .then((data) => {
+        console.log("Search History:", data);
+      })
+      .catch((error) => {
+        console.error("Error fetching history:", error);
+      });
+  }, [dispatch]);
 
   const handleSearch = (term) => {
     setIsLoading(true);
     setError("");
 
     const historyMatches = historySearch.filter(item =>
-      item.toLowerCase().includes(term.toLowerCase())
+      item.search.toLowerCase().includes(term.toLowerCase())
     );
 
-    const productMatches = historyMatches.length === 0
-      ? products.filter(product =>
-        product.name.toLowerCase().includes(term.toLowerCase())
-      )
-      : [];
+    const productMatches = products.filter(product =>
+      product.name.toLowerCase().includes(term.toLowerCase())
+    );
 
-    const combinedSuggestions = [...historyMatches, ...productMatches.map(product => product.name)].slice(0, 5);
+    const combinedSuggestions = [
+      ...historyMatches.map(item => item.search),
+      ...productMatches.map(product => product.name)
+    ].slice(0, 5);
+
     setSuggestions(combinedSuggestions);
 
     setIsLoading(false);
     if (combinedSuggestions.length === 0) setError("Không tìm thấy kết quả");
-    if (term.trim()) dispatch(addHistorySearch(term));
   };
 
   const handleInputChange = (value) => {
@@ -49,19 +64,21 @@ const SearchScreen = () => {
 
   const handleSuggestionClick = (suggestion) => {
     setSearchTerm(suggestion);
-    dispatch(addHistorySearch(suggestion));
+    dispatch(addHistorySearch({ uid: accountLoggedIn, search: suggestion }));
     navigation.navigate('SearchResult', { searchQuery: suggestion });
   };
 
+  const handleSearchNavigation = () => {
+    if (searchTerm.trim()) {
+      dispatch(addHistorySearch({ uid: accountLoggedIn, search: searchTerm }));
+      navigation.navigate('SearchResult', { searchQuery: searchTerm });
+    }
+  };
 
   const clearSearch = () => {
     setSearchTerm("");
     setSuggestions([]);
     setError("");
-  };
-
-  const handleRemoveHistory = (item) => {
-    dispatch(removeHistorySearch(item));
   };
 
   return (
@@ -82,10 +99,9 @@ const SearchScreen = () => {
               <Icon name="close" size={20} color="#9098b1" />
             </TouchableOpacity>
           )}
-          <TouchableOpacity onPress={() => navigation.navigate('SearchResult', { searchQuery: searchTerm })}>
+          <TouchableOpacity onPress={handleSearchNavigation}>
             <Icon name="search" size={20} color="#40bfff" />
           </TouchableOpacity>
-
         </View>
       </View>
 
@@ -108,11 +124,9 @@ const SearchScreen = () => {
       <View style={styles.historyContainer}>
         <Text style={styles.historyTitle}>Lịch sử tìm kiếm</Text>
         {historySearch.map((item, index) => (
-          <TouchableOpacity key={index} style={styles.historyItem} onPress={() => handleSuggestionClick(item)}>
-            <TouchableOpacity onPress={() => handleSuggestionClick(item)}>
-              <Text style={styles.historyText}>{item}</Text>
-            </TouchableOpacity>
-            <TouchableOpacity onPress={() => handleRemoveHistory(item)}>
+          <TouchableOpacity key={index} style={styles.historyItem} onPress={() => handleSuggestionClick(item.search)}>
+            <Text style={styles.historyText}>{item.search}</Text>
+            <TouchableOpacity onPress={() => dispatch(removeHistorySearch({ uid: accountLoggedIn, id: item.id }))}>
               <Icon name="close" size={16} color="#9098b1" />
             </TouchableOpacity>
           </TouchableOpacity>
