@@ -1,62 +1,66 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, TextInput, TouchableOpacity, Alert } from 'react-native';
-import { useDispatch, useSelector } from 'react-redux';
-import { updateAccount } from '../reduxToolkit/productsSlice'; 
+import { useDispatch } from 'react-redux';
+import { auth } from '../firebaseConfig';
+import { updatePassword, reauthenticateWithCredential, EmailAuthProvider } from 'firebase/auth';
 
 const EditPasswordScreen = ({ navigation }) => {
-  const dispatch = useDispatch();
-  const profiles = useSelector((state) => state.products.profile);
-  const accountLoggedIn = useSelector((state) => state.products.accountLoggedIn);
-
-  const userProfile = profiles.find(profile => profile.account_id === (accountLoggedIn ? accountLoggedIn.id : null));
-  const [oldPassword] = useState(accountLoggedIn.password);
-
   const [oldPasswordInput, setOldPasswordInput] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!oldPasswordInput) {
-      Alert.alert("Validation Error", "Old password cannot be empty");
-      return;
-    }
-    if (oldPassword !== oldPasswordInput) {
-      Alert.alert("Validation Error", "Old password is incorrect");
+      Alert.alert('Validation Error', 'Old password cannot be empty');
       return;
     }
 
     if (!newPassword) {
-      Alert.alert("Validation Error", "New password cannot be empty");
+      Alert.alert('Validation Error', 'New password cannot be empty');
       return;
     }
+
     if (newPassword.length < 8 || newPassword.length > 15) {
-      Alert.alert("Validation Error", "New password must be between 8 and 15 characters long");
+      Alert.alert(
+        'Validation Error',
+        'New password must be between 8 and 15 characters long'
+      );
       return;
     }
+
     const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,15}$/;
     if (!passwordRegex.test(newPassword)) {
       Alert.alert(
-        "Validation Error",
-        "New password must contain at least one uppercase letter, one lowercase letter, one number, and one special character"
+        'Validation Error',
+        'New password must contain at least one uppercase letter, one lowercase letter, one number, and one special character'
       );
       return;
     }
 
     if (!confirmPassword) {
-      Alert.alert("Validation Error", "Confirm password cannot be empty");
+      Alert.alert('Validation Error', 'Confirm password cannot be empty');
       return;
     }
+
     if (newPassword !== confirmPassword) {
-      Alert.alert("Validation Error", "New passwords do not match");
+      Alert.alert('Validation Error', 'New passwords do not match');
       return;
     }
-    dispatch(updateAccount({ id: userProfile.id, updatedData: { password: newPassword } }));
 
-    if (accountLoggedIn && accountLoggedIn.id === userProfile.id) {
-      dispatch(updateAccount({ id: accountLoggedIn.id, updatedData: { password: newPassword } }));
+    const user = auth.currentUser;
+    const credential = EmailAuthProvider.credential(user.email, oldPasswordInput);
+
+    try {
+      // Xác thực lại
+      await reauthenticateWithCredential(user, credential);
+      // Cập nhật mật khẩu mới
+      await updatePassword(user, newPassword);
+      Alert.alert('Success', 'Password updated successfully');
+      navigation.navigate('ProfileScreen');
+    } catch (error) {
+      console.error('Error updating password:', error);
+      Alert.alert('Error', error.message || 'Failed to update password');
     }
-
-    navigation.navigate('ProfileScreen', { updatedValue: newPassword, field: 'Password' });
   };
 
   return (

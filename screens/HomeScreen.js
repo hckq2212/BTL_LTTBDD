@@ -10,8 +10,7 @@ import { fetchProducts, fetchUserProfile } from '../reduxToolkit/productsSlice';
 const HomeScreen = () => {
   const dispatch = useDispatch();
   const products = useSelector((state) => state.products.products);
-  const profile = useSelector((state) => state.products.profile);
-  const userId = useSelector((state) => state.products.accountLoggedIn?.uid);
+  const userId = useSelector((state) => state.products.accountLoggedIn);
 
   useEffect(() => {
     dispatch(fetchProducts());

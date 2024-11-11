@@ -1,35 +1,43 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, TextInput, TouchableOpacity, Alert } from 'react-native';
 import { useDispatch, useSelector } from 'react-redux';
-import { updateAccount } from '../reduxToolkit/productsSlice';
+import { updateProfileInfo } from '../reduxToolkit/productsSlice';
 
 const EditPhoneNumberScreen = ({ navigation }) => {
   const dispatch = useDispatch();
-  const profiles = useSelector((state) => state.products.profile);
+  const profile = useSelector((state) => state.products.profile);
   const accountLoggedIn = useSelector((state) => state.products.accountLoggedIn);
 
-  const userProfile = profiles.find(profile => profile.account_id === (accountLoggedIn ? accountLoggedIn.id : null));
-  const [phoneNumber, setPhoneNumber] = useState(userProfile.phoneNumber); 
+  const [phoneNumber, setPhoneNumber] = useState(profile?.phoneNumber || '');
+
+  useEffect(() => {
+    if (profile?.phoneNumber) {
+      setPhoneNumber(profile.phoneNumber); // Đảm bảo giá trị ban đầu được đồng bộ từ profile
+    }
+  }, [profile]);
 
   const handleSave = () => {
     if (!phoneNumber) {
-      Alert.alert("Validation Error", "Phone number cannot be empty");
+      Alert.alert('Validation Error', 'Phone number cannot be empty');
       return;
     }
 
     const phoneNumberRegex = /^[+]*[(]{0,1}[0-9]{1,4}[)]{0,1}[-\s\./0-9]*$/;
     if (!phoneNumberRegex.test(phoneNumber)) {
-      Alert.alert("Validation Error", "Invalid phone number format");
+      Alert.alert('Validation Error', 'Invalid phone number format');
       return;
     }
 
-    dispatch(updateAccount({ id: userProfile.id, updatedData: { phoneNumber } }));
-
-    if (accountLoggedIn && accountLoggedIn.id === userProfile.id) {
-      dispatch(updateAccount({ id: accountLoggedIn.id, updatedData: { phoneNumber } }));
-    }
-
-    navigation.navigate('ProfileScreen', { updatedValue: phoneNumber, field: 'PhoneNumber' });
+    dispatch(updateProfileInfo({ uid: accountLoggedIn, updatedData: { phoneNumber } }))
+      .unwrap()
+      .then(() => {
+        Alert.alert('Success', 'Phone number updated successfully');
+        navigation.navigate('ProfileScreen', { updatedValue: phoneNumber, field: 'PhoneNumber' });
+      })
+      .catch((error) => {
+        console.error('Error updating phone number:', error);
+        Alert.alert('Error', 'Failed to update phone number');
+      });
   };
 
   return (

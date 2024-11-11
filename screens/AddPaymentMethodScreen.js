@@ -1,102 +1,101 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, ScrollView } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, ScrollView, Alert } from 'react-native';
 import { Appbar, RadioButton } from 'react-native-paper';
 import { useNavigation } from '@react-navigation/native';
-import axios from 'axios';
+import { useSelector, useDispatch } from 'react-redux';
+import { fetchPaymentMethods, updatePaymentMethod } from '../reduxToolkit/productsSlice';
 
 const AddPaymentMethodScreen = () => {
   const navigation = useNavigation();
+  const dispatch = useDispatch();
+  const paymentMethods = useSelector((state) => state.products.paymentMethods);
+
   const [selectedCard, setSelectedCard] = useState('visa');
   const [cardNumber, setCardNumber] = useState('');
   const [expiryDate, setExpiryDate] = useState('');
   const [cvv, setCvv] = useState('');
   const [cardName, setCardName] = useState('');
-  const [paymentMethods, setPaymentMethods] = useState([]);
 
   useEffect(() => {
-    const fetchPaymentMethods = async () => {
-      try {
-        const response = await axios.get('https://67231a7a2108960b9cc6ac7c.mockapi.io/paymentMethods');
-        setPaymentMethods(response.data);
-      } catch (error) {
-        console.error("Lỗi khi gọi API: ", error);
-      }
-    };
+    dispatch(fetchPaymentMethods());
+  }, [dispatch]);
 
-    fetchPaymentMethods();
-  }, []);
-
-  const handleAddCard = async () => {
+  const handleAddCard = () => {
     if (!cardNumber || !expiryDate || !cvv || !cardName) {
-      alert('Please fill out all fields');
+      Alert.alert('Lỗi', 'Vui lòng điền đầy đủ thông tin');
       return;
     }
 
-    const selectedMethod = paymentMethods.find(method => method.name.toLowerCase() === selectedCard);
+    const selectedMethod = paymentMethods.find(
+      (method) => method.name.toLowerCase() === selectedCard
+    );
 
     if (!selectedMethod) {
-      alert("Phương thức thanh toán không hợp lệ");
+      Alert.alert('Lỗi', 'Phương thức thanh toán không hợp lệ');
       return;
     }
 
-    const updatedAccounts = [...selectedMethod.accounts, `${selectedMethod.name} **** ${cardNumber.slice(-4)}`];
+    const newAccount = `${selectedMethod.name} **** ${cardNumber.slice(-4)}`;
+    const updatedAccounts = [...selectedMethod.accounts, newAccount];
 
-    try {
-      await axios.put(`https://67231a7a2108960b9cc6ac7c.mockapi.io/paymentMethods/${selectedMethod.id}`, {
-        ...selectedMethod,
-        accounts: updatedAccounts
+    dispatch(
+      updatePaymentMethod({
+        id: selectedMethod.id,
+        updatedData: { ...selectedMethod, accounts: updatedAccounts },
+      })
+    )
+      .unwrap()
+      .then(() => {
+        Alert.alert('Thành công', 'Thẻ đã được thêm thành công');
+        navigation.goBack();
+      })
+      .catch((error) => {
+        console.error('Error updating payment method:', error);
+        Alert.alert('Lỗi', 'Không thể thêm thẻ. Vui lòng thử lại.');
       });
-
-      navigation.goBack();
-    } catch (error) {
-      console.error("Lỗi khi cập nhật phương thức thanh toán:", error);
-      alert("Có lỗi xảy ra khi cập nhật thẻ.");
-    }
   };
 
-  const renderCardInputs = () => {
-    return (
-      <>
-        <Text style={styles.label}>Số thẻ</Text>
-        <TextInput
-          style={styles.input}
-          placeholder="1234 5678 9012 3456"
-          keyboardType="numeric"
-          value={cardNumber}
-          onChangeText={setCardNumber}
-          placeholderTextColor="#9098b1"
-          maxLength={19}
-        />
-        <View style={styles.row}>
-          <View style={styles.halfContainer}>
-            <Text style={styles.label}>Ngày hết hạn</Text>
-            <TextInput
-              style={styles.input}
-              placeholder="MM/YY"
-              keyboardType="numeric"
-              value={expiryDate}
-              onChangeText={setExpiryDate}
-              placeholderTextColor="#9098b1"
-              maxLength={5}
-            />
-          </View>
-          <View style={styles.halfContainer}>
-            <Text style={styles.label}>CVV</Text>
-            <TextInput
-              style={styles.input}
-              placeholder="123"
-              keyboardType="numeric"
-              value={cvv}
-              onChangeText={setCvv}
-              secureTextEntry
-              placeholderTextColor="#9098b1"
-              maxLength={3}
-            />
-          </View>
+  const renderCardInputs = () => (
+    <>
+      <Text style={styles.label}>Số thẻ</Text>
+      <TextInput
+        style={styles.input}
+        placeholder="1234 5678 9012 3456"
+        keyboardType="numeric"
+        value={cardNumber}
+        onChangeText={setCardNumber}
+        placeholderTextColor="#9098b1"
+        maxLength={19}
+      />
+      <View style={styles.row}>
+        <View style={styles.halfContainer}>
+          <Text style={styles.label}>Ngày hết hạn</Text>
+          <TextInput
+            style={styles.input}
+            placeholder="MM/YY"
+            keyboardType="numeric"
+            value={expiryDate}
+            onChangeText={setExpiryDate}
+            placeholderTextColor="#9098b1"
+            maxLength={5}
+          />
         </View>
-      </>
-    );
-  };
+        <View style={styles.halfContainer}>
+          <Text style={styles.label}>CVV</Text>
+          <TextInput
+            style={styles.input}
+            placeholder="123"
+            keyboardType="numeric"
+            value={cvv}
+            onChangeText={setCvv}
+            secureTextEntry
+            placeholderTextColor="#9098b1"
+            maxLength={3}
+          />
+        </View>
+      </View>
+    </>
+  );
 
   return (
     <View style={styles.container}>
@@ -108,7 +107,7 @@ const AddPaymentMethodScreen = () => {
       <ScrollView contentContainerStyle={styles.scrollView}>
         <View style={styles.card}>
           <Text style={styles.label}>Chọn loại thẻ</Text>
-          <RadioButton.Group onValueChange={value => setSelectedCard(value)} value={selectedCard}>
+          <RadioButton.Group onValueChange={setSelectedCard} value={selectedCard}>
             <View style={styles.radioButtonRow}>
               <RadioButton.Item label="Visa" value="visa" />
               <RadioButton.Item label="MasterCard" value="mastercard" />

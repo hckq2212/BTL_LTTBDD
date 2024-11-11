@@ -5,17 +5,20 @@ import { toggleFavorite } from '../reduxToolkit/productsSlice';
 import star from '../assets/FavoriteProduct/Star.png';
 import emptyStar from '../assets/FavoriteProduct/emptyStar.png';
 import trash from '../assets/FavoriteProduct/Trash.png';
-
+import { useNavigation } from '@react-navigation/native';
 const FavoriteProductScreen = () => {
+  const navigation = useNavigation();
   const dispatch = useDispatch();
-  const favoriteProducts = useSelector((state) => state.products.favoriteProducts);
-
+  const products = useSelector((state) => state.products);
+  const favoriteProducts = products.products.filter((product) => product.isFavorite);
   const handleToggleFavorite = (id) => {
-    dispatch(toggleFavorite(id));
+    dispatch(toggleFavorite({ productId: id }));
   };
-
+  const handlePress = (id) => {
+    navigation.navigate('ProductDetailScreen', { productId: id });
+  };
   const renderFavProduct = ({ item }) => (
-    <View style={styles.item}>
+    <TouchableOpacity style={styles.item} onPress={() => handlePress(item.id)}>
       <Image source={{ uri: item.image }} style={styles.image} />
       <View style={styles.productInfo}>
         <Text style={styles.productName}>{item.name}</Text>
@@ -34,7 +37,7 @@ const FavoriteProductScreen = () => {
       <TouchableOpacity onPress={() => handleToggleFavorite(item.id)} style={styles.trashButton}>
         <Image source={trash} style={styles.trashIcon} />
       </TouchableOpacity>
-    </View>
+    </TouchableOpacity>
   );
 
   return (

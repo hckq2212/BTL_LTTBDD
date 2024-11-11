@@ -1,23 +1,29 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Text, SafeAreaView, StyleSheet, View, TouchableOpacity, FlatList, Modal, TextInput, Alert, Image } from 'react-native';
 import { useSelector, useDispatch } from 'react-redux';
-import { addDeliveryAddress, updateDeliveryAddress, deleteDeliveryAddress } from '../reduxToolkit/productsSlice';
+import { addDeliveryInfo, updateDeliveryInfo, removeDeliveryInfo, fetchDeliveryInfo } from '../reduxToolkit/productsSlice';
 import Icon from 'react-native-vector-icons/FontAwesome';
 import left from '../assets/Shipto/Left.png';
 import add from '../assets/Shipto/Plus.png';
 import { useNavigation } from '@react-navigation/native';
-
 
 const ShipToScreen = ({ route }) => {
   const navigation = useNavigation();
   const { totalItems, totalPrice } = route.params;
   const dispatch = useDispatch();
   const deliveryInfo = useSelector((state) => state.products.deliveryInfo);
+  const accountLoggedIn = useSelector((state) => state.products.accountLoggedIn);
 
   const [modalVisible, setModalVisible] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [currentAddress, setCurrentAddress] = useState({ id: null, name: '', address: '', number: '' });
   const [selectedAddressId, setSelectedAddressId] = useState(null);
+
+  useEffect(() => {
+    if (accountLoggedIn) {
+      dispatch(fetchDeliveryInfo(accountLoggedIn));
+    }
+  }, [dispatch, accountLoggedIn]);
 
   const handleSave = () => {
     const nameRegex = /^[a-zA-Z\s]{2,}$/;
@@ -39,9 +45,9 @@ const ShipToScreen = ({ route }) => {
     }
 
     if (isEditing) {
-      dispatch(updateDeliveryAddress(currentAddress));
+      dispatch(updateDeliveryInfo({ uid: accountLoggedIn, id: currentAddress.id, updatedInfo: currentAddress }));
     } else {
-      dispatch(addDeliveryAddress({ ...currentAddress, id: Date.now() }));
+      dispatch(addDeliveryInfo({ uid: accountLoggedIn, deliveryInfo: { ...currentAddress, id: Date.now().toString() } }));
     }
 
     setModalVisible(false);
@@ -60,7 +66,7 @@ const ShipToScreen = ({ route }) => {
       'Are you sure you want to delete this address?',
       [
         { text: 'Cancel', style: 'cancel' },
-        { text: 'Delete', style: 'destructive', onPress: () => dispatch(deleteDeliveryAddress(id)) },
+        { text: 'Delete', style: 'destructive', onPress: () => dispatch(removeDeliveryInfo({ uid: accountLoggedIn, id })) },
       ]
     );
   };
@@ -74,7 +80,7 @@ const ShipToScreen = ({ route }) => {
       totalItems, totalPrice,
       selectedAddress: deliveryInfo.find((address) => address.id === selectedAddressId)
     });
-  }
+  };
 
   const renderDelivery = ({ item }) => (
     <View style={styles.item}>

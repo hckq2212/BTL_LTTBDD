@@ -1,19 +1,22 @@
 import React, { useState, useEffect } from 'react';
-import { StyleSheet, View, TouchableOpacity, Text, Image, SafeAreaView, Alert } from 'react-native';
+import {
+  StyleSheet,
+  View,
+  TouchableOpacity,
+  Text,
+  Image,
+  SafeAreaView,
+  Alert,
+} from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { useSelector, useDispatch } from 'react-redux';
-import { logout } from '../reduxToolkit/productsSlice';
+import { logout, fetchUserProfile } from '../reduxToolkit/productsSlice';
 
 const ProfileInfo = () => {
+  const dispatch = useDispatch();
   const accountLoggedIn = useSelector((state) => state.products.accountLoggedIn);
-  const profiles = useSelector((state) => state.products.profile);
-
-  const userProfile = profiles.find(profile => profile.account_id === accountLoggedIn?.id);
-
-console.log('accountLoggedIn:', accountLoggedIn);
-console.log('profiles:', profiles);
-console.log('userProfile:', userProfile);
+  const profile = useSelector((state) => state.products.profile);
 
   return (
     <View style={profileInfoStyles.container}>
@@ -22,13 +25,106 @@ console.log('userProfile:', userProfile);
         style={profileInfoStyles.image}
       />
       <View>
-        <Text style={profileInfoStyles.name}>{userProfile ? userProfile.name : 'User Name'}</Text>
-        <Text style={profileInfoStyles.username}>{accountLoggedIn ? `@${accountLoggedIn.name}` : '@username'}</Text>
+        <Text style={profileInfoStyles.name}>{profile?.fullName || 'User Name'}</Text>
+        <Text style={profileInfoStyles.username}>{profile?.email || '@username'}</Text>
       </View>
     </View>
   );
 };
 
+const ProfileItem = ({ icon, label, value, onPress }) => (
+  <TouchableOpacity style={profileItemStyles.card} onPress={onPress}>
+    <View style={profileItemStyles.container}>
+      <Image source={icon} style={profileItemStyles.icon} />
+      <Text style={profileItemStyles.label}>{label}</Text>
+      <Text style={profileItemStyles.value} numberOfLines={1}>
+        {value}
+      </Text>
+      <Ionicons name="chevron-forward-outline" size={20} color="#223263" />
+    </View>
+  </TouchableOpacity>
+);
+
+const ProfileScreen = () => {
+  const navigation = useNavigation();
+  const route = useRoute();
+  const dispatch = useDispatch();
+  const profile = useSelector((state) => state.products.profile);
+
+  const [userDetails, setUserDetails] = useState({
+    gender: profile?.gender || 'Not specified',
+    birthday: profile?.birthdate || 'Not specified',
+    email: profile?.email || 'Not specified',
+    phoneNumber: profile?.phoneNumber || 'Not specified',
+  });
+
+  useEffect(() => {
+    if (route.params?.updatedValue) {
+      setUserDetails((prevDetails) => ({
+        ...prevDetails,
+        [route.params.field.toLowerCase()]: route.params.updatedValue,
+      }));
+    }
+  }, [route.params]);
+
+  const handleLogout = () => {
+    Alert.alert('Logout', 'Are you sure you want to logout?', [
+      { text: 'Cancel', style: 'cancel' },
+      {
+        text: 'Logout',
+        onPress: () => {
+          dispatch(logout());
+          navigation.navigate('LoginScreen');
+        },
+      },
+    ]);
+  };
+
+  return (
+    <SafeAreaView style={styles.screen}>
+      <ProfileInfo />
+      <ProfileItem
+        icon={require('../assets/Profile/Gender.png')}
+        label="Gender"
+        value={userDetails.gender}
+        onPress={() => navigation.navigate('Gender', { value: userDetails.gender, field: 'Gender' })}
+      />
+      <ProfileItem
+        icon={require('../assets/Profile/Date.png')}
+        label="Birthday"
+        value={userDetails.birthday}
+        onPress={() =>
+          navigation.navigate('Birthday', { value: userDetails.birthday, field: 'Birthday' })
+        }
+      />
+      <ProfileItem
+        icon={require('../assets/Profile/Message.png')}
+        label="Email"
+        value={userDetails.email}
+        onPress={() => navigation.navigate('Email', { value: userDetails.email, field: 'Email' })}
+      />
+      <ProfileItem
+        icon={require('../assets/Profile/Phone.png')}
+        label="Phone Number"
+        value={userDetails.phoneNumber}
+        onPress={() =>
+          navigation.navigate('PhoneNumber', { value: userDetails.phoneNumber, field: 'PhoneNumber' })
+        }
+      />
+      <ProfileItem
+        icon={require('../assets/Profile/PasswordBlue.png')}
+        label="Change Password"
+        value="••••••••"
+        onPress={() => navigation.navigate('Password', { field: 'Password' })}
+      />
+      <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
+        <Text style={styles.logoutButtonText}>Logout</Text>
+      </TouchableOpacity>
+    </SafeAreaView>
+  );
+};
+
+// Styles
 const profileInfoStyles = StyleSheet.create({
   container: {
     flexDirection: 'row',
@@ -46,118 +142,13 @@ const profileInfoStyles = StyleSheet.create({
     fontWeight: '700',
     color: '#223263',
     fontFamily: 'Poppins',
-    marginBottom: 4,
   },
   username: {
     fontSize: 14,
     color: '#9098b1',
     fontFamily: 'Poppins',
-    lineHeight: 20,
-  }
+  },
 });
-
-const ProfileItem = ({ icon, label, value, onPress }) => {
-  return (
-    <TouchableOpacity style={profileItemStyles.card} onPress={onPress}>
-      <View style={profileItemStyles.container}>
-        <Image source={icon} style={profileItemStyles.icon} />
-        <Text style={profileItemStyles.label}>{label}</Text>
-        <Text style={profileItemStyles.value} numberOfLines={1}>{value}</Text>
-        <Ionicons name="chevron-forward-outline" size={20} color="#223263" style={profileItemStyles.arrow} />
-      </View>
-    </TouchableOpacity>
-  );
-};
-
-const ProfileScreen = () => {
-  const navigation = useNavigation();
-  const route = useRoute();
-  const dispatch = useDispatch();
-  const accountLoggedIn = useSelector((state) => state.products.accountLoggedIn);
-  const profiles = useSelector((state) => state.products.profile);
-
-  const userProfile = profiles.find(profile => profile.account_id === (accountLoggedIn ? accountLoggedIn.id : null));
-
-  const [gender, setGender] = useState(userProfile?.gender || 'Not specified');
-  const [birthday, setBirthday] = useState(userProfile?.birthdate || 'Not specified');
-  const [email, setEmail] = useState(accountLoggedIn?.email || 'Not specified');
-  const [phoneNumber, setPhoneNumber] = useState(userProfile?.phoneNumber || 'Not specified');
-
-  useEffect(() => {
-    if (route.params?.updatedValue) {
-      switch (route.params.field) {
-        case 'Gender':
-          setGender(route.params.updatedValue);
-          break;
-        case 'Birthday':
-          setBirthday(route.params.updatedValue);
-          break;
-        case 'Email':
-          setEmail(route.params.updatedValue);
-          break;
-        case 'Phone Number':
-          setPhoneNumber(route.params.updatedValue);
-          break;
-        default:
-          break;
-      }
-    }
-  }, [route.params]);
-
-  const handleLogout = () => {
-    Alert.alert(
-      "Logout",
-      "Are you sure you want to logout?",
-      [
-        { text: "Cancel", style: "cancel" },
-        { text: "Logout", onPress: () => {
-            dispatch(logout()); 
-            navigation.navigate('LoginScreen');
-          } 
-        },
-      ]
-    );
-  };
-
-  return (
-    <SafeAreaView style={styles.screen}>
-      <ProfileInfo />
-      <ProfileItem
-        icon={require('../assets/Profile/Gender.png')}
-        label='Gender'
-        value={gender}
-        onPress={() => navigation.navigate('Gender', { value: gender, field: 'Gender' })}
-      />
-      <ProfileItem
-        icon={require('../assets/Profile/Date.png')}
-        label='Birthday'
-        value={birthday}
-        onPress={() => navigation.navigate('Birthday', { value: birthday, field: 'Birthday' })}
-      />
-      <ProfileItem
-        icon={require('../assets/Profile/Message.png')}
-        label='Email'
-        value={email}
-        onPress={() => navigation.navigate('Email', { value: email, field: 'Email' })}
-      />
-      <ProfileItem
-        icon={require('../assets/Profile/Phone.png')}
-        label='Phone Number'
-        value={phoneNumber}
-        onPress={() => navigation.navigate('PhoneNumber', { value: phoneNumber, field: 'PhoneNumber' })}
-      />
-      <ProfileItem
-        icon={require('../assets/Profile/PasswordBlue.png')}
-        label='Change Password'
-        value='••••••••'
-        onPress={() => navigation.navigate('Password', { field: 'Password' })}
-      />
-      <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
-        <Text style={styles.logoutButtonText}>Logout</Text>
-      </TouchableOpacity>
-    </SafeAreaView>
-  );
-};
 
 const profileItemStyles = StyleSheet.create({
   card: {
@@ -169,9 +160,7 @@ const profileItemStyles = StyleSheet.create({
   container: {
     flexDirection: 'row',
     alignItems: 'center',
-    width: '100%',
-    height: 56,
-    paddingHorizontal: 16,
+    padding: 16,
     borderBottomWidth: 1,
     borderBottomColor: '#ebf0ff',
   },
@@ -185,17 +174,11 @@ const profileItemStyles = StyleSheet.create({
     fontSize: 14,
     color: '#223263',
     fontFamily: 'Poppins',
-    fontWeight: '600',
   },
   value: {
+    fontSize: 14,
     color: '#9098b1',
     fontFamily: 'Poppins',
-    fontSize: 14,
-    marginRight: 8,
-    textAlign: 'right',
-  },
-  arrow: {
-    marginLeft: 8,
   },
 });
 
