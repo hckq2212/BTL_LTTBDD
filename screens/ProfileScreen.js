@@ -25,7 +25,7 @@ const ProfileInfo = () => {
         style={profileInfoStyles.image}
       />
       <View>
-        <Text style={profileInfoStyles.name}>{profile?.fullName || 'User Name'}</Text>
+        <Text style={profileInfoStyles.name}>{profile?.name || 'User Name'}</Text>
         <Text style={profileInfoStyles.username}>{profile?.email || '@username'}</Text>
       </View>
     </View>

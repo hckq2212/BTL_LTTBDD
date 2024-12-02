@@ -70,7 +70,7 @@ export default function App() {
           <Stack.Screen name="PaymentMethodsScreen" component={PaymentMethodsScreen} />
           <Stack.Screen name="SearchScreen" component={SearchScreen} />
           <Stack.Screen name="SearchResult" component={SearchResultScreen} />
-          <Stack.Screen name="SuccessScreen" component={SuccessScreen} />
+          <Stack.Screen name="SuccessScreen" component={SuccessScreen} options={{ headerShown: false }} />
           <Stack.Screen name="AddPaymentMethodScreen" component={AddPaymentMethodScreen} />
           <Stack.Screen name="RegisterScreen" component={RegisterScreen} />
           <Stack.Screen name="Gender" component={EditGenderScreen} />
@@ -86,7 +86,7 @@ export default function App() {
             )}
           </Stack.Screen>
           <Stack.Screen name="FilterSearchScreen" component={FilterSearchScreen} />
-          <Stack.Screen name="ShipToScreen" component={ShipToScreen} />
+          <Stack.Screen name="ShipToScreen" component={ShipToScreen} options={{ headerShown: false }} />
         </Stack.Navigator>
       </NavigationContainer>
     </Provider>

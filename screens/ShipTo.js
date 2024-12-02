@@ -111,7 +111,7 @@ const ShipToScreen = ({ route }) => {
     <SafeAreaView style={styles.container}>
       <SafeAreaView style={styles.header}>
         <SafeAreaView style={styles.headerLeft}>
-          <TouchableOpacity>
+          <TouchableOpacity onPress={() => navigation.goBack()}>
             <Image source={left} style={{ marginLeft: 10, marginRight: 10 }} />
           </TouchableOpacity>
           <Text style={{ fontWeight: 'bold', fontSize: 15 }}>Ship To</Text>
